@@ -10,8 +10,12 @@ on:
       - "database/**"
       - "Dockerfile"
       - "docker-compose.yml"
+      - "docker-compose.prod.yml"
+      - "deploy/**"
+      - "loadtest/**"
       - ".env.example"
       - ".github/workflows/security-scan.yml"
+      - ".github/workflows/operations-ci.yml"
   pull_request:
     paths:
       - "backend/**"
