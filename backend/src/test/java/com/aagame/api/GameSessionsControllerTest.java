@@ -62,6 +62,8 @@ class GameSessionsControllerTest {
 
         mvc.perform(get("/api/games/sessions/" + id).header("Authorization", "Bearer " + token))
             .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("COMPLETED"));
+        mvc.perform(get("/api/games/sessions?limit=20").header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.sessions[0].sessionId").value(id));
 
         mvc.perform(post("/api/games/sessions/" + id + "/complete").header("Authorization", "Bearer " + token))
             .andExpect(status().isConflict());
