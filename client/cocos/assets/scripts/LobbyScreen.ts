@@ -1,5 +1,6 @@
-import { _decorator, Component, Label, Button } from "cc";
+import { _decorator, Component, Label, Button, Node } from "cc";
 import { GameService, DemoGameId, GameSummary, GameSession } from "./GameService";
+import { AuthService, UserProfile, DemoCreditBalance } from "./AuthService";
 
 const { ccclass, property } = _decorator;
 
@@ -13,6 +14,11 @@ export class LobbyScreen extends Component {
     @property(Label) statusLabel: Label | null = null;
     @property(Label) scoreLabel: Label | null = null;
     @property(Label) historyLabel: Label | null = null;
+    @property(Label) profileLabel: Label | null = null;
+    @property(Label) balanceLabel: Label | null = null;
+    @property(Button) logoutButton: Button | null = null;
+    @property(Node) authRoot: Node | null = null;
+    @property(Node) lobbyRoot: Node | null = null;
     @property(Button) playButton: Button | null = null;
     @property(Button) finishButton: Button | null = null;
 
@@ -42,7 +48,7 @@ export class LobbyScreen extends Component {
                     : "No demo games are currently available.";
             }
             this.setStatus("Choose a game. Demo credits have no monetary value.");
-            await this.refreshHistory();
+            await Promise.all([this.refreshHistory(), this.refreshAccount()]);
         } catch (error) {
             this.setStatus(this.message(error));
         }
@@ -115,6 +121,39 @@ export class LobbyScreen extends Component {
         } finally {
             this.busy = false;
             this.setButtonEnabled(this.playButton, !this.activeSession);
+        }
+    }
+
+    async logout(): Promise<void> {
+        if (this.busy) return;
+        this.busy = true;
+        this.setButtonEnabled(this.logoutButton, false);
+        try {
+            await AuthService.logout();
+            this.activeSession = null;
+            if (this.lobbyRoot) this.lobbyRoot.active = false;
+            if (this.authRoot) this.authRoot.active = true;
+            this.setStatus("Signed out securely.");
+        } catch (error) {
+            this.setStatus(this.message(error));
+        } finally {
+            this.busy = false;
+            this.setButtonEnabled(this.logoutButton, true);
+        }
+    }
+
+    private async refreshAccount(): Promise<void> {
+        try {
+            const [profile, credits]: [UserProfile, DemoCreditBalance] = await Promise.all([
+                AuthService.profile(), AuthService.demoCredits()
+            ]);
+            if (this.profileLabel) this.profileLabel.string = profile.email + " · " + profile.role;
+            if (this.balanceLabel) this.balanceLabel.string =
+                credits.balance.toLocaleString() + " DEMO CREDITS\nNo cash value";
+        } catch (error) {
+            if (this.profileLabel) this.profileLabel.string = "Account unavailable";
+            if (this.balanceLabel) this.balanceLabel.string = "Sign in to view demo credits";
+            this.setStatus(this.message(error));
         }
     }
 
