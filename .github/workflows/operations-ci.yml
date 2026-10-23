@@ -1,0 +1,48 @@
+name: Operations Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docker-compose.yml"
+      - "docker-compose.prod.yml"
+      - "deploy/**"
+      - "database/*.sh"
+      - "loadtest/**"
+      - ".gitignore"
+      - ".github/workflows/operations-ci.yml"
+  pull_request:
+    paths:
+      - "docker-compose.yml"
+      - "docker-compose.prod.yml"
+      - "deploy/**"
+      - "database/*.sh"
+      - "loadtest/**"
+      - ".gitignore"
+      - ".github/workflows/operations-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate local Compose config
+        run: docker compose -f docker-compose.yml config --quiet
+      - name: Validate production Compose config
+        env:
+          APP_DOMAIN: example.com
+          MYSQL_DATABASE: aa_game
+          MYSQL_USER: ci_user
+          MYSQL_PASSWORD: ci_only_password
+          MYSQL_ROOT_PASSWORD: ci_only_root_password
+        run: docker compose -f docker-compose.prod.yml config --quiet
+      - name: Validate shell scripts
+        run: sh -n database/backup.sh database/restore.sh
+      - name: Verify production secrets are not tracked
+        run: |
+          test -z "$(git ls-files .env.prod)"
+          test -z "$(git ls-files backups)"
