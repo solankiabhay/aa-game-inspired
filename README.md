@@ -90,17 +90,15 @@ The client renders screens and sends commands; the backend validates identity, p
 - [x] Persistent demo sessions and server-generated completion scores.\n- [ ] Full game-specific state machines and result validation.
 - [ ] Per-game rules, abuse controls and expanded deterministic game tests.
 
-### Phase 3 — Cocos Creator client
-- [ ] Navigation shell, login/register forms, loading/error states.
-- [ ] Lobby and game cards.
-- [ ] Three distinct playable demo prototypes with no cash value.
-- [ ] Profile, credit history, settings, reconnect handling and accessibility checks.
+### Phase 3 — Client
+- [x] Working browser client with registration/login, lobby, wallet/ledger, session lifecycle and recent history.
+- [ ] Native Cocos Creator project, scenes and mobile builds.
 
 ### Phase 4 — Admin and operations
-- [ ] Admin login using server-issued roles (not a hidden frontend route).
-- [ ] User search/status, game config, audit log viewer.
-- [ ] Admin actions logged with actor, reason, timestamp and before/after values.
-- [ ] Health/metrics, backup/restore procedure and incident checklist.
+- [x] Same-origin admin sign-in and role-protected backend APIs.
+- [x] User search/status, audit log viewer, reasoned status changes and session revocation.
+- [ ] Game configuration editor and game config API.
+- [ ] Operational monitoring, backup/restore rehearsal and incident checklist.
 
 ### Phase 5 — Release hardening
 - [ ] CI checks, dependency scanning, secret scanning and container scanning.
@@ -112,13 +110,13 @@ The client renders screens and sends commands; the backend validates identity, p
 
 Prerequisites: Git, Docker Compose, Java 21, Maven (or use Maven Wrapper once added).
 
-1. Copy `.env.example` to `.env` and replace local-only values.
-2. Start MySQL: `docker compose up -d mysql`.
-3. Run API from `backend/`: `mvn spring-boot:run`.
-4. Verify: `curl http://localhost:8080/api/health`.
-5. Run backend tests: `mvn test`.
+1. Copy `.env.example` to `.env` and use local-only values.
+2. Start the full stack: `docker compose up --build -d`.
+3. Open `http://localhost:8080/` for the browser client and `http://localhost:8080/admin/index.html` for the admin console.
+4. Verify `curl http://localhost:8080/api/health` and `curl http://localhost:8080/api/games`.
+5. Run backend tests: `cd backend && mvn --batch-mode verify`.
 
-The current health endpoint does not prove database connectivity or authentication is implemented. Do not expose development credentials or the local database port in production.
+The native Cocos Creator project and production deployment are not complete. Do not expose development credentials or the local database port in production.
 
 ## 8. Quality gates
 
