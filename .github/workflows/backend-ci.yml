@@ -78,3 +78,20 @@ jobs:
           curl --silent --show-error --fail -X POST "http://127.0.0.1:8080/api/games/sessions/$SESSION_ID/complete" -H "Authorization: Bearer $TOKEN" | jq -e '.status == "COMPLETED"' >/dev/null
       - name: Build container image
         run: docker build --tag aa-game-api:ci .
+      - name: Run container against MySQL
+        env:
+          DB_URL: jdbc:mysql://127.0.0.1:3306/aa_game?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+          DB_USERNAME: aa_game
+          DB_PASSWORD: testpassword
+        run: |
+          docker run --detach --network host --name aa-game-api-container \
+            --env DB_URL="$DB_URL" --env DB_USERNAME="$DB_USERNAME" \
+            --env DB_PASSWORD="$DB_PASSWORD" --env PORT=8080 aa-game-api:ci
+          trap 'docker rm --force aa-game-api-container >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:8080/api/health >/dev/null; then break; fi
+            if [ "$(docker inspect -f '{{.State.Running}}' aa-game-api-container)" != "true" ]; then docker logs aa-game-api-container; exit 1; fi
+            sleep 2
+          done
+          curl --silent --show-error --fail http://127.0.0.1:8080/api/health
+          curl --silent --show-error --fail http://127.0.0.1:8080/api/games
