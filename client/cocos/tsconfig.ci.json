@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "files": [
+    "tests/cc-stubs.d.ts",
+    "assets/scripts/ApiClient.ts",
+    "assets/scripts/AuthService.ts",
+    "assets/scripts/AuthScreen.ts",
+    "assets/scripts/GameService.ts",
+    "assets/scripts/LobbyScreen.ts",
+    "assets/scripts/MiniGameController.ts"
+  ]
+}
