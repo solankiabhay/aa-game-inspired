@@ -103,7 +103,7 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
 
     private static final class Window {
         private final long startedAtMillis;
-        private int count;
+        private volatile int count;
 
         private Window(long startedAtMillis, int count) {
             this.startedAtMillis = startedAtMillis;
