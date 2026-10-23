@@ -125,11 +125,11 @@ public class AuthController {
         return new SessionResponse(token, "Bearer", expires.toString());
     }
 
+    @Transactional
     @PostMapping("/verify-email")
     public Map<String, String> verifyEmail(@Valid @RequestBody TokenRequest request) {
-        ActionToken token = findActionToken(request.token(), "EMAIL_VERIFY");
+        ActionToken token = consumeActionToken(request.token(), "EMAIL_VERIFY");
         jdbc.update("UPDATE app_users SET email_verified=TRUE WHERE id=?", token.userId());
-        jdbc.update("UPDATE auth_action_tokens SET used_at=CURRENT_TIMESTAMP WHERE token_hash=?", sha256(request.token()));
         return Map.of("status", "EMAIL_VERIFIED", "message", "Email verified. You can now sign in.");
     }
 
@@ -155,10 +155,9 @@ public class AuthController {
     @Transactional
     @PostMapping("/password-reset/confirm")
     public Map<String, String> confirmPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
-        ActionToken token = findActionToken(request.token(), "PASSWORD_RESET");
+        ActionToken token = consumeActionToken(request.token(), "PASSWORD_RESET");
         jdbc.update("UPDATE app_users SET password_hash=? WHERE id=?",
             passwordEncoder.encode(request.newPassword()), token.userId());
-        jdbc.update("UPDATE auth_action_tokens SET used_at=CURRENT_TIMESTAMP WHERE token_hash=?", sha256(request.token()));
         jdbc.update("DELETE FROM user_sessions WHERE user_id=?", token.userId());
         return Map.of("status", "PASSWORD_RESET", "message", "Password changed. Sign in with your new password.");
     }
@@ -225,13 +224,15 @@ public class AuthController {
         mailSender.send(message);
     }
 
-    private ActionToken findActionToken(String rawToken, String purpose) {
+    private ActionToken consumeActionToken(String rawToken, String purpose) {
         if (rawToken == null || rawToken.isBlank() || rawToken.length() > 128) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This link is invalid or expired. Request a new one.");
         }
         var tokens = jdbc.query("SELECT user_id FROM auth_action_tokens WHERE token_hash=? AND purpose=? AND used_at IS NULL AND expires_at>CURRENT_TIMESTAMP",
             (rs, row) -> new ActionToken(rs.getLong("user_id")), sha256(rawToken), purpose);
         if (tokens.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This link is invalid or expired. Request a new one.");
+        int consumed = jdbc.update("UPDATE auth_action_tokens SET used_at=CURRENT_TIMESTAMP WHERE token_hash=? AND purpose=? AND used_at IS NULL AND expires_at>CURRENT_TIMESTAMP", sha256(rawToken), purpose);
+        if (consumed != 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This link is invalid or expired. Request a new one.");
         return tokens.get(0);
     }
 
