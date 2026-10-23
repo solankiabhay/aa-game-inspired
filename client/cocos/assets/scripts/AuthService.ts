@@ -21,7 +21,7 @@ export interface DemoCreditBalance {
 /** Authentication and profile methods. Token stays in memory for this app session. */
 export class AuthService {
     static async register(email: string, password: string): Promise<{status: string; email: string; startingDemoCredits: number}> {
-        return ApiClient.post("/api/auth/register", { email: email.trim(), password });
+        return ApiClient.post<{status: string; email: string; startingDemoCredits: number}>("/api/auth/register", { email: email.trim(), password });
     }
 
     static async login(email: string, password: string): Promise<SessionResponse> {
