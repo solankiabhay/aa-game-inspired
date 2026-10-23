@@ -3,9 +3,14 @@ import { Script } from "node:vm";
 import assert from "node:assert/strict";
 
 const html = readFileSync(new URL("./index.html", import.meta.url), "utf8");
+const servedHtml = readFileSync(new URL("../../backend/src/main/resources/static/index.html", import.meta.url), "utf8");
+assert.equal(servedHtml, html, "Browser source and Spring Boot served page must stay in sync");
 assert.match(html, /<html lang="en">/);
 assert.match(html, /name="viewport"/);
 assert.match(html, /prefers-reduced-motion/);
+assert.match(html, /aria-live="polite"/);
+assert.match(html, /name="description"/);
+assert.match(html, /reset-password\.html/);
 assert.ok(html.includes("/api/auth/login"));
 assert.ok(html.includes("/api/auth/register"));
 assert.ok(html.includes("/api/games"));
