@@ -4,7 +4,7 @@ This directory contains a Caddy TLS reverse proxy configuration. Production stac
 
 Before starting:
 1. Provision a Linux host with Docker Engine and Compose plugin; point the domain's A/AAAA records to it.
-2. Copy `deploy/env.prod.example` to `.env.prod`, then replace every placeholder with `APP_DOMAIN`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, and `MYSQL_ROOT_PASSWORD`, and `REDIS_PASSWORD`. Use unique generated secrets; never commit `.env.prod`.
+2. Copy `deploy/env.prod.example` to `.env.prod`, then replace every placeholder, including `APP_DOMAIN`, MySQL credentials, `REDIS_PASSWORD`, `MAIL_FROM`, and working `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, and `SMTP_PASSWORD`. Use unique generated secrets; never commit `.env.prod`.
 3. Review firewall rules: expose only TCP 80/443 (and optional UDP 443); do not expose MySQL or the API directly.
 4. Start with `docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build`.
 5. Verify TLS, `https://YOUR_DOMAIN/api/health`, authentication, admin authorization, and game-session behavior.
