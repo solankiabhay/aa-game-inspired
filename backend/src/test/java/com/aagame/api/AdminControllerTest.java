@@ -41,6 +41,8 @@ class AdminControllerTest {
         jdbc.execute("CREATE TABLE demo_credit_accounts (user_id BIGINT PRIMARY KEY, balance BIGINT NOT NULL DEFAULT 1000, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE)");
         jdbc.execute("CREATE TABLE demo_credit_ledger (id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id BIGINT NOT NULL, delta BIGINT NOT NULL, balance_after BIGINT NOT NULL, reason VARCHAR(40) NOT NULL, reference_id VARCHAR(64), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE)");
         jdbc.execute("CREATE TABLE game_sessions (id VARCHAR(36) PRIMARY KEY, user_id BIGINT NOT NULL, game_id VARCHAR(64) NOT NULL, status VARCHAR(20) NOT NULL, score BIGINT NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, finished_at TIMESTAMP NULL, FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE)");
+        jdbc.execute("CREATE TABLE game_configs (game_id VARCHAR(64) PRIMARY KEY, title VARCHAR(120) NOT NULL, category VARCHAR(32) NOT NULL, description VARCHAR(500) NOT NULL, enabled BOOLEAN NOT NULL DEFAULT TRUE, updated_by BIGINT NULL, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (updated_by) REFERENCES app_users(id))");
+        jdbc.update("INSERT INTO game_configs(game_id,title,category,description,enabled) VALUES (?,?,?,?,?)", "skyline-crash", "Skyline Crash", "ARCADE", "Demo round.", true);
         jdbc.execute("CREATE TABLE audit_events (id BIGINT AUTO_INCREMENT PRIMARY KEY, actor_user_id BIGINT NOT NULL, action VARCHAR(80) NOT NULL, target_type VARCHAR(40) NOT NULL, target_id VARCHAR(80) NOT NULL, reason VARCHAR(500) NOT NULL, before_value VARCHAR(500), after_value VARCHAR(500), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (actor_user_id) REFERENCES app_users(id))");
     }
 
@@ -63,6 +65,28 @@ class AdminControllerTest {
 
         mvc.perform(get("/api/admin/audit-events").header("Authorization", "Bearer " + token))
             .andExpect(status().isOk()).andExpect(jsonPath("$.events[0].action").value("USER_STATUS_CHANGED"));
+    }
+
+    @Test
+    void adminCanUpdateGameConfigurationAndAuditIt() throws Exception {
+        register("admin-game@example.com");
+        jdbc.update("UPDATE app_users SET role='ADMIN' WHERE email='admin-game@example.com'");
+        String token = login("admin-game@example.com");
+
+        mvc.perform(get("/api/admin/games").header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.games[0].id").value("skyline-crash"));
+
+        mvc.perform(patch("/api/admin/games/skyline-crash/config")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"Skyline Demo\",\"description\":\"Updated demo description\",\"enabled\":true,\"reason\":\"Refresh demo copy\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("Skyline Demo"));
+
+        mvc.perform(get("/api/admin/audit-events").header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.events[0].action").value("GAME_CONFIG_CHANGED"));
     }
 
     @Test
