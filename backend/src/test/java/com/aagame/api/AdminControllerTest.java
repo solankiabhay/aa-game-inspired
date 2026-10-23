@@ -84,6 +84,10 @@ class AdminControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.title").value("Skyline Demo"));
 
+        mvc.perform(get("/api/games"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.games[0].title").value("Skyline Demo"));
+
         mvc.perform(get("/api/admin/audit-events").header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.events[0].action").value("GAME_CONFIG_CHANGED"));
