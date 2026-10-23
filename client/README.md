@@ -3,8 +3,8 @@
 ## Working browser MVP
 A lightweight browser client is implemented at `client/web/index.html` and served by Spring Boot at `http://localhost:8080/` after the backend is running. It calls the real API for registration, login/logout, game catalogue, demo-credit balance/ledger, session start and server-generated completion score. The canonical source is `client/web/index.html`; the backend static copy is `backend/src/main/resources/static/index.html`.
 
-## Cocos Creator client — still pending
-A full TypeScript/Cocos Creator native/mobile project is not yet implemented. It requires selecting/pinning the Creator editor version and adding valid project metadata/assets.
+## Cocos Creator client — scaffold started, project still pending
+Typed API, auth and game service modules are available in [the Cocos scaffold](cocos/README.md). A full TypeScript/Cocos Creator native/mobile project is not yet implemented. It requires selecting/pinning the Creator editor version and adding valid project metadata/assets.
 
 ### Planned scenes
 - Boot / loading
