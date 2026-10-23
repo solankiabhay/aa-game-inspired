@@ -121,8 +121,8 @@ public class AdminController {
                 "enabled", rs.getBoolean("enabled")), gameId);
         if (current.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Game configuration not found.");
         Map<String, Object> before = current.get(0);
-        String beforeValue = before.get("title") + "|" + before.get("description") + "|" + before.get("enabled");
-        String afterValue = request.title().trim() + "|" + request.description().trim() + "|" + request.enabled();
+        String beforeValue = auditValue(before.get("title") + "|" + before.get("description") + "|" + before.get("enabled"));
+        String afterValue = auditValue(request.title().trim() + "|" + request.description().trim() + "|" + request.enabled());
         jdbc.update("UPDATE game_configs SET title=?,description=?,enabled=?,updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE game_id=?",
             request.title().trim(), request.description().trim(), request.enabled(), actorId, gameId);
         jdbc.update("INSERT INTO audit_events(actor_user_id,action,target_type,target_id,reason,before_value,after_value) VALUES (?,?,?,?,?,?,?)",
@@ -131,7 +131,7 @@ public class AdminController {
             "description", request.description().trim(), "enabled", request.enabled(), "changed", true);
     }
 
-    private long requireAdmin(String authorization) {
+    private static String auditValue(String value) {\n        return value.length() <= 500 ? value : value.substring(0, 500);\n    }\n\n    private long requireAdmin(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ") || authorization.substring(7).trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "A Bearer session token is required.");
         }
