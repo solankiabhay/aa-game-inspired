@@ -1,0 +1,50 @@
+package com.aagame.api;
+
+import java.time.Duration;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockFilterChain;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class AuthenticationRateLimitFilterTest {
+    @Test
+    void limitsLoginAttemptsAndReturnsRetryAfter() throws Exception {
+        AuthenticationRateLimitFilter filter = new AuthenticationRateLimitFilter(
+            2, Duration.ofMinutes(1), 3, Duration.ofMinutes(5));
+
+        for (int i = 0; i < 2; i++) {
+            MockHttpServletResponse response = invoke(filter, "/api/auth/login", "192.0.2.10");
+            assertEquals(200, response.getStatus());
+        }
+
+        MockHttpServletResponse limited = invoke(filter, "/api/auth/login", "192.0.2.10");
+        assertEquals(429, limited.getStatus());
+        assertEquals("RATE_LIMITED", com.fasterxml.jackson.databind.JsonNode.class
+            .cast(new com.fasterxml.jackson.databind.ObjectMapper().readTree(limited.getContentAsString()))
+            .get("code").asText());
+        assertEquals(true, limited.getHeader("Retry-After") != null);
+    }
+
+    @Test
+    void separatesClientsAndDoesNotThrottleUnrelatedEndpoints() throws Exception {
+        AuthenticationRateLimitFilter filter = new AuthenticationRateLimitFilter(
+            1, Duration.ofMinutes(1), 1, Duration.ofMinutes(5));
+
+        assertEquals(200, invoke(filter, "/api/auth/login", "192.0.2.11").getStatus());
+        assertEquals(200, invoke(filter, "/api/auth/login", "192.0.2.12").getStatus());
+        assertEquals(200, invoke(filter, "/api/auth/me", "192.0.2.11").getStatus());
+        assertEquals(429, invoke(filter, "/api/auth/login", "192.0.2.11").getStatus());
+    }
+
+    private static MockHttpServletResponse invoke(AuthenticationRateLimitFilter filter, String path, String ip)
+            throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", path);
+        request.setRemoteAddr(ip);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilter(request, response, new MockFilterChain());
+        return response;
+    }
+}
