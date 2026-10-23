@@ -39,6 +39,7 @@ jobs:
           MYSQL_USER: ci_user
           MYSQL_PASSWORD: ci_only_password
           MYSQL_ROOT_PASSWORD: ci_only_root_password
+          REDIS_PASSWORD: ci_only_redis_password
         run: docker compose -f docker-compose.prod.yml config --quiet
       - name: Validate shell scripts
         run: sh -n database/backup.sh database/restore.sh
