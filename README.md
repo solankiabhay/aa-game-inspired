@@ -12,9 +12,9 @@ Implemented and CI-tested:
 - Non-redeemable demo credits and ledger, server-generated demo game sessions.
 - Role-protected admin endpoints and audit events.
 - Browser client and admin console.
-- Authentication per-process throttling (10 login attempts/IP/15m; 5 registration attempts/IP/hour), baseline security headers, and no-store headers for authentication responses.
+- Authentication throttling (10 login attempts/IP/15m; 5 registration attempts/IP/hour), with an in-process local fallback and Redis-backed shared counters in the production template; baseline security headers and no-store headers for authentication responses.
 - Backend integration tests, MySQL smoke test, Docker build/run, CodeQL, Gitleaks and Trivy CI workflows.
-- Production deployment template using Caddy, an internal database network, database backup/restore scripts, and a k6 health smoke test.
+- Production deployment template using Caddy TLS, a baseline CSP, private MySQL/Redis network, database backup/restore scripts, and a k6 health smoke test. Operations CI validates Compose, Caddy syntax, and shell scripts.
 
 ## Quick start (local)
 
