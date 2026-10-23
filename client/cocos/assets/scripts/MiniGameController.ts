@@ -206,7 +206,7 @@ export class MiniGameController extends Component {
     private setTiles(enabled: boolean): void {
         this.taps.forEach((button, index) => {
             button.interactable = enabled;
-            const label = button.getComponentInChildren(Label);
+            const label = button.node.getComponentInChildren(Label);
             if (label) label.string = SYMBOLS[index];
         });
     }
