@@ -12,7 +12,8 @@ Implemented and CI-tested:
 - Non-redeemable demo credits and ledger, server-generated demo game sessions.
 - Role-protected admin endpoints and audit events.
 - Responsive browser arcade client with interactive Skyline Dash, Neon Sequence and Reef Ranger mini-challenges, account dashboard, demo-credit ledger, game history, and email-recovery screens; admin console.
-- Client smoke tests validate inline JavaScript syntax, unique HTML IDs, DOM references and game/API wiring in CI.
+- Browser-client CI checks JavaScript syntax, unique HTML IDs, DOM references, accessibility basics, and parity between the source page and Spring Boot-served copy.
+- Cocos native TypeScript integration includes secure in-memory auth, account summary/credits, logout, recent sessions, and interactive controllers for Skyline Dash, Neon Sequence and Reef Ranger; CI type-checks the scripts against Cocos API shims.
 - Authentication throttling (10 login attempts/IP/15m; 5 registration attempts/IP/hour), with an in-process local fallback and Redis-backed shared counters in the production template; baseline security headers and no-store headers for authentication responses.
 - Backend integration tests, MySQL smoke test, Docker build/run, CodeQL, Gitleaks and Trivy CI workflows.
 - Production deployment template using Caddy TLS, a baseline CSP, private MySQL/Redis network, database backup/restore scripts, and a k6 health smoke test. Operations CI validates Compose, Caddy syntax, and shell scripts.
@@ -33,7 +34,7 @@ See docs/DEPLOYMENT.md and deploy/README.md. The template is not a live deployme
 
 - backend/ — Spring Boot API and tests
 - client/web/ — browser MVP
-- client/cocos/ — TypeScript integration scaffold; not yet a complete editor-generated Cocos Creator project
+- client/cocos/ — Cocos Creator TypeScript source and native mini-game controllers; editor-generated scenes/prefabs and device builds remain release gates
 - admin/ — admin console
 - database/ — backup/restore scripts and database documentation
 - deploy/ — Caddy configuration and deployment notes
