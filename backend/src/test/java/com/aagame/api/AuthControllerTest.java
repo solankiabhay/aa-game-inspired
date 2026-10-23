@@ -77,7 +77,9 @@ class AuthControllerTest {
     void rejectsWeakPasswordAndWrongCredentials() throws Exception {
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"bad@example.com\",\"password\":\"weak\"}"))
-            .andExpect(status().isBadRequest())\n            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))\n            .andExpect(jsonPath("$.requestId").exists());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+            .andExpect(jsonPath("$.requestId").exists());
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"missing@example.com\",\"password\":\"SomeLongPassword123!\"}"))
             .andExpect(status().isUnauthorized());
