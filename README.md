@@ -103,7 +103,8 @@ The client renders screens and sends commands; the backend validates identity, p
 - [ ] Operational monitoring, backup/restore rehearsal and incident checklist.
 
 ### Phase 5 — Release hardening
-- [x] Backend CI, real-MySQL API smoke test, container image build, Dependabot updates and CodeQL workflow.\n- [ ] Secret/container vulnerability scanning and release gates.
+- [x] Backend CI, real-MySQL API smoke test, container image build, Dependabot updates and CodeQL workflow.
+- [ ] Secret/container vulnerability scanning and release gates.
 - [ ] API contract, integration, UI and load tests.
 - [ ] Threat model, privacy review, production configuration review.
 - [ ] Staging deployment and rollback rehearsal before any production release.
@@ -138,7 +139,9 @@ A feature is complete only when all apply:
 - [Data model and migration plan](docs/DATA_MODEL.md)
 - [Security and threat model](docs/SECURITY.md)
 - [Testing strategy and acceptance criteria](docs/TEST_PLAN.md)
-- [Development roadmap](docs/ROADMAP.md)\n- [Administrator bootstrap runbook](docs/ADMIN_BOOTSTRAP.md)\n- [Local deployment and production gate](docs/DEPLOYMENT.md)
+- [Development roadmap](docs/ROADMAP.md)
+- [Administrator bootstrap runbook](docs/ADMIN_BOOTSTRAP.md)
+- [Local deployment and production gate](docs/DEPLOYMENT.md)
 - [Backend guide](backend/README.md)
 - [Cocos client guide](client/README.md)
 - [Admin guide](admin/README.md)
