@@ -1,36 +1,33 @@
 # Data Model and Migration Plan
 
-Use Flyway versioned migrations once persistence is implemented. Store UTC timestamps. Use UUIDs or opaque IDs for public references; never expose sequential database IDs as authorization.
+Flyway migrations are implemented under `backend/src/main/resources/db/migration`. Timestamps are stored in UTC-compatible database timestamps. Public session IDs are UUIDs; authentication uses opaque random tokens whose SHA-256 hashes are stored.
 
-## Proposed tables
-- `users`: id, normalized_email (unique), password_hash, role, status, created_at, updated_at.
-- `sessions` or `refresh_tokens`: user_id, token_hash, expires_at, revoked_at, created_at, device metadata kept minimal.
-- `demo_credit_accounts`: user_id unique, balance (integer smallest virtual-credit unit), version, updated_at.
-- `demo_credit_ledger`: id, user_id, amount_delta, reason_code, reference_type, reference_id, idempotency_key, created_at. Unique constraints should prevent duplicate application of a transaction.
-- `game_sessions`: id, user_id, game_code, status, rules_version, request_key, started_at, completed_at.
-- `game_results`: session_id unique, result_payload, created_at; payload must exclude secrets.
-- `game_configs`: game_code, version, enabled, config_json, updated_by, updated_at.
-- `audit_events`: actor_user_id, action, target_type, target_id, reason, before_json, after_json, request_id, created_at.
+## Implemented tables
+
+- `app_users` (V1): auto-increment ID, unique normalized email, BCrypt password hash, role, status, created timestamp.
+- `user_sessions` (V1): SHA-256 token hash, user ID, expiry and created timestamp; foreign key cascades on user deletion.
+- `demo_credit_accounts` (V2): one row per user and non-negative integer balance. New accounts start at 1,000 non-redeemable credits.
+- `demo_credit_ledger` (V2): append-by-application-logic entries containing delta, balance-after, reason, reference and timestamp.
+- `game_sessions` (V2): UUID, owner, game ID, status, score, created/finished timestamps.
+- `audit_events` (V3): actor, action, target, required reason, before/after values and timestamp.
+- `game_configs` (V4): game ID, display title, category, description, enabled flag, updater and update timestamp.
 
 ## Invariants
-1. Normalized email is unique.
-2. Password hashes only; never plaintext or reversible encryption.
-3. Ledger is append-only from application logic. Corrections use compensating entries, not row edits.
-4. A balance update and corresponding ledger row happen in one transaction.
-5. The server rejects a debit that would make balance negative.
-6. Each idempotency key is scoped to the user/operation and unique in its required scope.
-7. Game result and associated ledger mutation commit atomically.
-8. Admin changes create an audit record.
-9. Do not store full IP/device fingerprints unless there is a documented need, retention policy and privacy review.
+1. Email is normalized to lowercase and unique.
+2. Passwords are hashed; plaintext is never persisted.
+3. Tokens are random and only token hashes are persisted; the token itself is returned once at login.
+4. User creation, welcome-credit account and welcome-ledger entry are in one transaction.
+5. Demo-credit balance is not redeemable, transferable or wagered in this MVP.
+6. The server generates demo scores; the client cannot submit a score/result.
+7. A game session can be completed only once and only by its owner.
+8. Admin user-status and game-config mutations require an ADMIN session, a reason and an audit event.
+9. Suspended users cannot log in or use sessions; suspension revokes existing sessions.
+
+## Known gaps
+- The ledger is not yet used for credit/debit gameplay transactions, idempotency keys or concurrent wallet mutations because demo credits are not spent.
+- Admin role promotion is a controlled manual database operation described in `ADMIN_BOOTSTRAP.md`; it is not a public API.
+- Manual role changes must be captured in the operator audit log; the application audit table records API mutations.
+- Full retention/deletion policy, operational backup strategy and production privacy review remain pending.
 
 ## Indexes
-Add indexes for normalized_email, ledger(user_id, created_at), game_sessions(user_id, started_at), audit_events(created_at), and idempotency uniqueness. Validate query plans with realistic data.
-
-## Migration strategy
-- V1 users and role/status enums or constrained strings.
-- V2 sessions/refresh token hashes.
-- V3 demo-credit account and ledger.
-- V4 game catalog/session/result tables.
-- V5 admin configuration and audit events.
-
-Names and exact types should be finalized in migrations and then reflected in this document.
+Migrations include indexes for session lookup/expiry, user ledger history, user game-session history and audit event time/target. Review query plans with realistic production-like data before launch.
