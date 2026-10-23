@@ -27,6 +27,7 @@ A built-in fixed-window filter limits public authentication POST endpoints by th
 - Login: 10 requests per 15 minutes.
 - Registration: 5 requests per hour.
 - Excess attempts receive HTTP 429, a `Retry-After` header, and a `RATE_LIMITED` response code.
+- Baseline browser response headers include `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` and `Cross-Origin-Opener-Policy`.
 
 Defaults can be overridden with Spring properties/environment variables:
 - `APP_SECURITY_RATE_LIMIT_LOGIN_MAX_REQUESTS`
@@ -37,7 +38,7 @@ Defaults can be overridden with Spring properties/environment variables:
 This limiter is in-process. Before deploying multiple API instances, configure a shared gateway or distributed rate limiter (for example Redis), and only trust forwarded client-IP headers when the reverse proxy is explicitly configured to overwrite them.
 
 ## Tests and CI
-`mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks, rate-limit unit tests and a Flyway migration smoke test. GitHub Actions runs backend verification, CodeQL, and secret/dependency/misconfiguration scans for backend changes.
+`mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks, rate-limit and browser-security-header unit tests, and a Flyway migration smoke test. GitHub Actions runs backend verification, CodeQL, and secret/dependency/misconfiguration scans for backend changes.
 
 ## Known limitations — not production ready
 - Email verification, password reset, MFA, session listing and refresh-token rotation are not implemented.
