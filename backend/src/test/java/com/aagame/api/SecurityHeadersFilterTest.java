@@ -22,4 +22,16 @@ class SecurityHeadersFilterTest {
         assertEquals("camera=(), microphone=(), geolocation=()", response.getHeader("Permissions-Policy"));
         assertEquals("same-origin", response.getHeader("Cross-Origin-Opener-Policy"));
     }
+
+    @Test
+    void preventsCachingAuthenticationResponses() throws Exception {
+        SecurityHeadersFilter filter = new SecurityHeadersFilter();
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertEquals("no-store", response.getHeader("Cache-Control"));
+        assertEquals("no-cache", response.getHeader("Pragma"));
+    }
 }
