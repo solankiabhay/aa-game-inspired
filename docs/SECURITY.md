@@ -45,7 +45,7 @@ Security controls are design requirements until code and tests prove they exist.
 ## Known security gaps — do not expose publicly yet
 - Registration/login rate limiting and abuse monitoring are not implemented.
 - Email verification, password reset, MFA and refresh-token rotation are not implemented.
-- Validation errors are not yet normalized through a single generic response handler.
+- Validation and malformed JSON have standardized error envelopes; unexpected exception coverage and production logging/correlation still need review.
 - No production TLS/reverse proxy, CSP/security-header configuration, dependency/image scanning or external secrets manager has been configured.
 - Admin role changes performed manually in the database are not automatically recorded in the app audit table; record them in the operator audit log.
 - No real-MySQL end-to-end deployment, penetration test or load test has been completed.
