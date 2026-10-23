@@ -99,7 +99,7 @@ The client renders screens and sends commands; the backend validates identity, p
 ### Phase 4 — Admin and operations
 - [x] Same-origin admin sign-in and role-protected backend APIs.
 - [x] User search/status, audit log viewer, reasoned status changes and session revocation.
-- [ ] Game configuration editor and game config API.
+- [x] Game configuration API and admin UI with audited reasoned changes.
 - [ ] Operational monitoring, backup/restore rehearsal and incident checklist.
 
 ### Phase 5 — Release hardening
