@@ -27,7 +27,7 @@
 - [x] Maven `verify` and H2-backed integration tests run in GitHub Actions.
 - [x] Tests cover catalogue, registration/login/logout, welcome-credit ledger, session lifecycle/history, admin authorization/status audit, static pages and Flyway migrations.
 - [ ] Docker Compose startup against a real MySQL container verified end-to-end.
-- [ ] Live API smoke test against MySQL verified.
+- [x] Live API smoke test against real MySQL and built container verified in GitHub Actions.
 - [ ] Native Cocos Creator editor build and device test (client not implemented).
 - [ ] Production security/accessibility review.
 
