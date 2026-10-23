@@ -75,10 +75,10 @@ class GameSessionsControllerTest {
     @Test
     void rejectsDisabledGameEvenWhenIdIsKnown() throws Exception {
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
-            .content("{\\"email\\":\\"disabled@example.com\\",\\"password\\":\\"StrongPassword123!\\"}"))
+            .content("{\"email\":\"disabled@example.com\",\"password\":\"StrongPassword123!\"}"))
             .andExpect(status().isCreated());
         String login = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-            .content("{\\"email\\":\\"disabled@example.com\\",\\"password\\":\\"StrongPassword123!\\"}"))
+            .content("{\"email\":\"disabled@example.com\",\"password\":\"StrongPassword123!\"}"))
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         String token = new com.fasterxml.jackson.databind.ObjectMapper().readTree(login).get("accessToken").asText();
         jdbc.update("UPDATE game_configs SET enabled=FALSE WHERE game_id='neon-reels'");
