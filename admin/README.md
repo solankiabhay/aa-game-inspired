@@ -6,7 +6,7 @@ A lightweight API-connected admin console is implemented at `admin/index.html` a
 Features:
 - Administrator sign-in using the existing backend session endpoint.
 - Search users by email.
-- Suspend/reactivate user accounts with a required reason.
+- Suspend/reactivate user accounts with a required reason.\n- Edit game title/description and enable/disable demo entries with audited reasons.
 - View recent audit events.
 - In-memory-only browser token; sign out calls session revocation.
 - Permission enforcement occurs in the backend, not just in the UI.
@@ -17,7 +17,7 @@ There is no public admin-promotion endpoint by design. Follow [the controlled bo
 ## Remaining production work
 - Replace basic HTML UI with a versioned, tested component framework if desired.
 - Add pagination, stronger confirmation dialogs, filters and accessibility testing.
-- Add admin game configuration endpoints and corresponding UI.
+- Add pagination, richer confirmation dialogs and stronger admin MFA/SSO.
 - Add stronger admin MFA/SSO, approval controls and operational audit for role changes.
 - Perform security review before any public deployment.
 
