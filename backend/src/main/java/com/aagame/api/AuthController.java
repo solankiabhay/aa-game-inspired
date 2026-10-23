@@ -23,8 +23,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.MailException;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -58,14 +60,14 @@ public class AuthController {
     private final String publicBaseUrl;
     private final String mailFrom;
 
-    public AuthController(JdbcTemplate jdbc, PasswordEncoder passwordEncoder, JavaMailSender mailSender,
+    public AuthController(JdbcTemplate jdbc, PasswordEncoder passwordEncoder, ObjectProvider<JavaMailSender> mailSenderProvider,
             @Value("${app.security.email-verification-enabled:false}") boolean emailVerificationEnabled,
             @Value("${app.security.password-reset-enabled:false}") boolean passwordResetEnabled,
             @Value("${app.public-base-url:http://localhost:8080}") String publicBaseUrl,
             @Value("${app.mail.from:no-reply@example.invalid}") String mailFrom) {
         this.jdbc = jdbc;
         this.passwordEncoder = passwordEncoder;
-        this.mailSender = mailSender;
+        this.mailSender = mailSenderProvider.getIfAvailable();
         this.emailVerificationEnabled = emailVerificationEnabled;
         this.passwordResetEnabled = passwordResetEnabled;
         this.publicBaseUrl = publicBaseUrl.replaceAll("/+$", "");
@@ -222,6 +224,7 @@ public class AuthController {
         message.setTo(email);
         message.setSubject(subject);
         message.setText(bodyPrefix + token + "\n\nIf you did not request this, you can ignore this message.");
+        if (mailSender == null) throw new MailSendException("SMTP is not configured");
         mailSender.send(message);
     }
 
