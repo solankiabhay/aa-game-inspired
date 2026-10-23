@@ -35,21 +35,18 @@ Send the returned token as `Authorization: Bearer <token>`. Never log passwords 
 
 These are demo simulation endpoints, not production game mechanics. Demo credits are not wagered, transferred, sold or redeemable.
 
-## Planned authentication hardening
+### Admin
+- GET `/api/admin/users?query=...` — returns at most 100 matching users.
+- PATCH `/api/admin/users/{userId}/status` — sets status to `ACTIVE` or `SUSPENDED`, requires a reason, revokes sessions on suspension, and writes an audit event.
+- GET `/api/admin/audit-events` — latest 100 audit events.
+
+Admin endpoints require a valid session for a database-provisioned `ADMIN` role. There is deliberately no public endpoint to grant admin privileges. Bootstrap the first administrator manually using the restricted database runbook; never expose a default admin password in source code.
+
+## Planned hardening
 - Rate limiting and abuse controls for registration/login.
 - Email verification, password reset, session listing/revocation, refresh tokens, and stronger account recovery.
-- Standardized validation error response for every exception type.
-
-## Planned admin
-- GET `/api/admin/users?query=...`
-- PATCH `/api/admin/users/{userId}/status`
-- GET/PATCH `/api/admin/games` and `/api/admin/games/{gameId}/config`
-- GET `/api/admin/audit-events`
-
-Admin mutations must enforce an admin role, validate changes and record audit events. These endpoints are not implemented.
-
-## Error handling
-Known business errors use HTTP status codes such as 401 unauthenticated, 404 missing resource, 409 conflict, and 400 validation. Do not return stack traces, SQL errors or secrets. Validation errors still need a unified production-grade response format.
+- Unified production-grade validation errors, request IDs and central exception coverage.
+- Admin game configuration endpoints and dashboard UI.
 
 ## Database
-Flyway migrations are under `backend/src/main/resources/db/migration`. Migration V1 creates users and hashed sessions; V2 creates the demo-credit ledger and game-session tables.
+Flyway migrations are under `backend/src/main/resources/db/migration`: V1 users/sessions, V2 demo-credit ledger/game sessions, V3 admin audit events.
