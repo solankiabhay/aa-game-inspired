@@ -25,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/games")
 public class GameSessionsController {
-    private static final List<String> ALLOWED_GAMES = List.of("skyline-crash", "neon-reels", "reef-ranger");
     private static final SecureRandom RANDOM = new SecureRandom();
     private final JdbcTemplate jdbc;
 
@@ -37,7 +36,9 @@ public class GameSessionsController {
     public ResponseEntity<?> start(@PathVariable String gameId,
                                    @RequestHeader(name = "Authorization", required = false) String authorization) {
         long userId = userId(authorization);
-        if (!ALLOWED_GAMES.contains(gameId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found.");
+        var enabled = jdbc.query("SELECT game_id FROM game_configs WHERE game_id=? AND enabled=TRUE",
+            (rs, row) -> rs.getString("game_id"), gameId);
+        if (enabled.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found or disabled.");
         String id = UUID.randomUUID().toString();
         jdbc.update("INSERT INTO game_sessions(id,user_id,game_id,status,score) VALUES (?,?,?,'ACTIVE',0)", id, userId, gameId);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
