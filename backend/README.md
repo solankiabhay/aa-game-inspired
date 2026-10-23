@@ -16,6 +16,9 @@ From repository root:
 - `GET /api/games`: static original demo game catalogue.
 - `POST /api/auth/register`: email/password validation, BCrypt hash, account + 1,000 demo credits + ledger entry in one transaction.
 - `POST /api/auth/login`: 256-bit opaque Bearer token, 24-hour expiry; only SHA-256 token hash stored.
+- `POST /api/auth/verify-email`: consume one-time 24-hour email verification token.
+- `POST /api/auth/password-reset/request`: generic 202 response; sends reset mail when enabled.
+- `POST /api/auth/password-reset/confirm`: consume one-time 30-minute reset token, update password, revoke all sessions.
 - `GET /api/auth/me`, `POST /api/auth/logout`: profile and session revocation.
 - `GET /api/auth/me/demo-credits`, `GET /api/auth/me/ledger`: virtual balance and latest ledger entries.
 - `POST /api/games/{gameId}/sessions`, `POST /api/games/sessions/{sessionId}/complete`, `GET /api/games/sessions/{sessionId}`: persistent demo session lifecycle. Score is generated on the server.
@@ -41,7 +44,7 @@ Local development defaults to the in-process limiter. Production Compose enables
 `mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks, rate-limit and browser-security-header unit tests, and a Flyway migration smoke test. GitHub Actions runs backend verification, CodeQL, and secret/dependency/misconfiguration scans for backend changes.
 
 ## Known limitations — not production ready
-- Email verification, password reset, MFA, session listing and refresh-token rotation are not implemented.
+- MFA, refresh-token rotation and session listing are not implemented. SMTP delivery, verification/reset links and token-expiry behavior still need provider-specific staging validation.
 - Persistent abuse monitoring, distributed rate limiting, production security headers/CSP, external secret management and production TLS/reverse-proxy configuration remain deployment work.
 - Game catalog is in-memory; game scores are demo simulations, not complete game engines.
 - A browser client and admin dashboard are served by Spring Boot; the native Cocos Creator app is not implemented yet.
