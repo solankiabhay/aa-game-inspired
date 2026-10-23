@@ -40,7 +40,7 @@ Security controls are design requirements until code and tests prove they exist.
 - Admin APIs check the database role on every request and record user-status changes with a reason.
 - Browser client/admin keep tokens in page memory only and use same-origin API paths when served by Spring Boot.
 - Docker runtime uses a non-root numeric user.
-- API responses set baseline browser security headers: nosniff, frame denial, referrer policy, permissions policy and same-origin opener policy.
+- API responses set baseline browser security headers: nosniff, frame denial, referrer policy, permissions policy and same-origin opener policy. Authentication responses are marked `Cache-Control: no-store` and `Pragma: no-cache`.
 - Login and registration endpoints have configurable, per-process fixed-window rate limits. Defaults: 10 login attempts per IP per 15 minutes and 5 registration attempts per IP per hour. Throttled requests return HTTP 429 with a `Retry-After` header.
 
 ## Known security gaps — do not expose publicly yet
