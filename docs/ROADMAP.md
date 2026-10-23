@@ -1,38 +1,42 @@
 # Implementation Roadmap
 
-## P0 — Make the repository reproducible
-- Confirm Java/Maven versions and pin toolchain.
-- Add Maven Wrapper.
-- Add CI for backend build/test.
-- Confirm MySQL startup and API smoke test.
-- Add Flyway baseline and test profile.
+Status is based on committed code, not design documents. See the [deployment gate](DEPLOYMENT.md) before exposing the service publicly.
+
+## P0 — Reproducible backend and container
+- [x] Java 21 / Spring Boot / Maven backend and GitHub Actions CI.
+- [ ] Add Maven Wrapper.
+- [x] Flyway migrations and H2 migration smoke test.
+- [x] Dockerfile and Compose stack for MySQL + API.
+- [x] CI job exercises API against real MySQL and builds/runs the container (see latest workflow result).
 
 ## P1 — Authentication
-- Define API DTOs and error model.
-- Implement registration, password hashing, login and safe session management.
-- Add profile endpoint, logout/revocation, password reset adapter.
-- Add integration tests and rate limiting.
+- [x] Email validation, BCrypt password hashing and normalized unique emails.
+- [x] Opaque 24-hour sessions, SHA-256 token storage, profile and logout.
+- [x] Standard validation and malformed-JSON response envelopes.
+- [x] Integration tests for register/login/profile/logout and bad credentials.
+- [ ] Distributed rate limiting, email verification, password reset and refresh-token rotation.
 
-## P2 — Demo-credit ledger
-- Add account initialization and ledger migration.
-- Implement transactional, idempotent credit operations.
-- Add ledger pagination and concurrency tests.
+## P2 — Demo credits and user activity
+- [x] New users receive 1,000 non-redeemable demo credits and an initial ledger entry in one transaction.
+- [x] Balance and latest ledger endpoints.
+- [ ] General credit/debit operations, idempotency and concurrent-balance tests (no credits are currently spent or transferred).
+- [x] Persistent demo game sessions, server-generated simulated scores and recent session history.
+- [ ] Full per-game state machines and gameplay rules.
 
-## P3 — Game service and Cocos UI
-- Publish game catalog.
-- Implement server-authoritative state machine and versioned rules for each demo.
-- Build original lobby and mini-game scenes.
-- Connect API client and error/loading states.
+## P3 — Client
+- [x] Browser client served by Spring Boot: register/login, lobby, wallet/ledger, play/complete rounds and recent history.
+- [ ] Native Cocos Creator project, mobile scenes and device builds.
 
 ## P4 — Admin
-- Choose admin SPA framework and pin version.
-- Implement admin authorization, user lookup/status, game config and audit viewer.
-- Add admin UI tests and accessibility pass.
+- [x] Same-origin admin console and server-side ADMIN role checks.
+- [x] User search, account suspension/reactivation, session revocation and audit viewer.
+- [ ] Game configuration API/editor, pagination, MFA/SSO and accessibility review.
 
 ## P5 — Release candidate
-- CI quality/security gates, dependency/secret scanning.
-- Staging deploy, load tests, monitoring, backup/restore, rollback.
-- Security/privacy/legal review.
+- [x] Backend CI, H2 integration tests, real-MySQL smoke test, Docker image build/run, Dependabot and CodeQL workflow configured.
+- [ ] Verify all latest CI runs pass after final changes.
+- [ ] Add secret/container scanning, TLS/reverse proxy configuration, distributed rate limiting and production secrets management.
+- [ ] Staging deploy, load tests, monitoring, backup/restore, rollback rehearsal, security/privacy/legal review.
 
 ## Release criteria
-No phase is considered done until its acceptance criteria and tests pass. Keep this roadmap aligned with actual repository code.
+The project is a functional browser MVP, not a production release. Do not mark the native Cocos app, security hardening or deployment complete until their tests and acceptance criteria pass.
