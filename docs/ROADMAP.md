@@ -30,7 +30,8 @@ Status is based on committed code, not design documents. See the [deployment gat
 ## P4 — Admin
 - [x] Same-origin admin console and server-side ADMIN role checks.
 - [x] User search, account suspension/reactivation, session revocation and audit viewer.
-- [x] Game configuration API/editor with audited changes.\n- [ ] Pagination, MFA/SSO and accessibility review.
+- [x] Game configuration API/editor with audited changes.
+- [ ] Pagination, MFA/SSO and accessibility review.
 
 ## P5 — Release candidate
 - [x] Backend CI, H2 integration tests, real-MySQL smoke test, Docker image build/run, Dependabot and CodeQL workflow configured.
