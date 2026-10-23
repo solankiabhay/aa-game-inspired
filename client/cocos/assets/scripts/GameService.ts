@@ -19,6 +19,12 @@ export interface GameSession {
     finishedAt?: string | null;
 }
 
+export interface SessionList {
+    sessions: GameSession[];
+    limit: number;
+}
+
+/** Typed API boundary for the server-authoritative demo-game catalogue and sessions. */
 export class GameService {
     static async catalogue(): Promise<GameSummary[]> {
         const response = await ApiClient.get<{count: number; games: GameSummary[]}>("/api/games");
@@ -35,8 +41,7 @@ export class GameService {
 
     static async recent(limit = 20): Promise<GameSession[]> {
         const safeLimit = Math.max(1, Math.min(Math.floor(limit), 100));
-        const response = await ApiClient.get<{sessions: GameSession[]; limit: number}>(
-            "/api/games/sessions?limit=" + safeLimit);
+        const response = await ApiClient.get<SessionList>("/api/games/sessions?limit=" + safeLimit);
         return response.sessions;
     }
 }
