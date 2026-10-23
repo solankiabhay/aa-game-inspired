@@ -11,7 +11,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.<RowMapper<GamesController.GameSummary>>any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,7 +24,7 @@ class GamesControllerTest {
 
     @BeforeEach
     void catalogueRows() {
-        when(jdbc.query(anyString(), any())).thenReturn(List.of(
+        when(jdbc.query(anyString(), org.mockito.ArgumentMatchers.<RowMapper<GamesController.GameSummary>>any())).thenReturn(List.of(
             new GamesController.GameSummary("skyline-crash", "Skyline Crash", "ARCADE", "Simulated multiplier round.", true),
             new GamesController.GameSummary("neon-reels", "Neon Reels", "CASUAL", "Demo reels.", true),
             new GamesController.GameSummary("reef-ranger", "Reef Ranger", "ARCADE", "Underwater arcade demo.", true)
