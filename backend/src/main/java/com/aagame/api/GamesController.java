@@ -21,7 +21,7 @@ public class GamesController {
     public GameCatalogue listGames() {
         List<GameSummary> games = jdbc.query("""
             SELECT game_id,title,category,description,enabled
-            FROM game_configs WHERE enabled=TRUE ORDER BY game_id
+            FROM game_configs WHERE enabled=TRUE ORDER BY CASE game_id WHEN 'skyline-crash' THEN 1 WHEN 'neon-reels' THEN 2 WHEN 'reef-ranger' THEN 3 ELSE 4 END
             """, (rs, row) -> new GameSummary(
                 rs.getString("game_id"),
                 rs.getString("title"),
