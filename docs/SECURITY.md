@@ -45,7 +45,7 @@ Security controls are design requirements until code and tests prove they exist.
 
 ## Known security gaps — do not expose publicly yet
 - Authentication throttling is per application process and uses the direct remote address. Configure trusted proxy handling carefully and add a shared gateway/Redis limiter before running multiple instances; persistent abuse monitoring and alerting are not implemented.
-- Email verification, password reset, MFA and refresh-token rotation are not implemented.
+- Email verification and password reset are implemented behind configuration flags and enabled in the production Compose template; SMTP delivery must be configured and tested with the actual provider. MFA and refresh-token rotation are not implemented.
 - Validation and malformed JSON have standardized error envelopes; unexpected exception coverage and production logging/correlation still need review.
 - A baseline CSP is configured in the production Caddy template, currently allowing inline scripts/styles for compatibility with the existing static UI; remove unsafe-inline after migrating those assets. Production TLS/reverse-proxy, container image scanning, external secrets management and browser compatibility checks remain deployment work. Baseline browser security headers are implemented.
 - Admin role changes performed manually in the database are not automatically recorded in the app audit table; record them in the operator audit log.
