@@ -2,38 +2,35 @@ package com.aagame.api;
 
 import java.util.List;
 
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Public catalogue for the original demo-only games.
- *
- * <p>This endpoint intentionally exposes no wagering, deposits, cash-outs, or
- * real-money functionality. Gameplay outcomes in this MVP are simulations.</p>
- */
+/** Public catalogue for original demo-only games, read from database configuration. */
 @RestController
 @RequestMapping("/api/games")
 public class GamesController {
+    private final JdbcTemplate jdbc;
 
-    private final List<GameSummary> games = List.of(
-        new GameSummary("skyline-crash", "Skyline Crash", "ARCADE", "Watch the multiplier rise in a simulated round.", true),
-        new GameSummary("neon-reels", "Neon Reels", "CASUAL", "A colourful slot-style demo using non-redeemable credits.", true),
-        new GameSummary("reef-ranger", "Reef Ranger", "ARCADE", "A score-chasing underwater arcade demo.", true)
-    );
+    public GamesController(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
 
     @GetMapping
     public GameCatalogue listGames() {
+        List<GameSummary> games = jdbc.query("""
+            SELECT game_id,title,category,description,enabled
+            FROM game_configs WHERE enabled=TRUE ORDER BY game_id
+            """, (rs, row) -> new GameSummary(
+                rs.getString("game_id"),
+                rs.getString("title"),
+                rs.getString("category"),
+                rs.getString("description"),
+                rs.getBoolean("enabled")));
         return new GameCatalogue(games.size(), games);
     }
 
-    public record GameSummary(
-        String id,
-        String title,
-        String category,
-        String description,
-        boolean enabled
-    ) {}
-
+    public record GameSummary(String id, String title, String category, String description, boolean enabled) {}
     public record GameCatalogue(int count, List<GameSummary> games) {}
 }
