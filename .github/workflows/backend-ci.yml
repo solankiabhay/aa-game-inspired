@@ -22,6 +22,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: aa_game
+          MYSQL_USER: aa_game
+          MYSQL_PASSWORD: testpassword
+          MYSQL_ROOT_PASSWORD: testrootpassword
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -ptestrootpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     defaults:
       run:
         working-directory: backend
@@ -36,5 +51,30 @@ jobs:
           cache: maven
       - name: Build and test
         run: mvn --batch-mode verify
+      - name: MySQL-backed end-to-end smoke test
+        env:
+          DB_URL: jdbc:mysql://127.0.0.1:3306/aa_game?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+          DB_USERNAME: aa_game
+          DB_PASSWORD: testpassword
+          PORT: 8080
+        run: |
+          java -jar target/aa-game-api-0.1.0-SNAPSHOT.jar > /tmp/aa-game-api.log 2>&1 &
+          APP_PID=$!
+          trap 'kill "$APP_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:8080/api/health >/dev/null; then break; fi
+            if ! kill -0 "$APP_PID" 2>/dev/null; then cat /tmp/aa-game-api.log; exit 1; fi
+            sleep 2
+          done
+          curl --silent --show-error --fail http://127.0.0.1:8080/api/health
+          curl --silent --show-error --fail http://127.0.0.1:8080/api/games
+          curl --silent --show-error --fail -X POST http://127.0.0.1:8080/api/auth/register -H 'Content-Type: application/json' -d '{"email":"ci-player@example.com","password":"StrongPassword123!"}'
+          TOKEN=$(curl --silent --show-error --fail -X POST http://127.0.0.1:8080/api/auth/login -H 'Content-Type: application/json' -d '{"email":"ci-player@example.com","password":"StrongPassword123!"}' | jq -r '.accessToken')
+          test -n "$TOKEN" && test "$TOKEN" != "null"
+          BALANCE=$(curl --silent --show-error --fail http://127.0.0.1:8080/api/auth/me/demo-credits -H "Authorization: Bearer $TOKEN" | jq -r '.balance')
+          test "$BALANCE" = "1000"
+          SESSION=$(curl --silent --show-error --fail -X POST http://127.0.0.1:8080/api/games/skyline-crash/sessions -H "Authorization: Bearer $TOKEN")
+          SESSION_ID=$(printf '%s' "$SESSION" | jq -r '.sessionId')
+          curl --silent --show-error --fail -X POST "http://127.0.0.1:8080/api/games/sessions/$SESSION_ID/complete" -H "Authorization: Bearer $TOKEN" | jq -e '.status == "COMPLETED"' >/dev/null
       - name: Build container image
         run: docker build --tag aa-game-api:ci .
