@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arcade Lab · Admin</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151d32;--line:#2a3652;--text:#edf2ff;--muted:#9ba9c8;--accent:#8b7cff;--danger:#ff737e;--ok:#61d6ad}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1b2550 0,transparent 55%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:1100px;margin:0 auto;padding:28px 18px 60px}header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}.eyebrow{color:#aaa0ff;text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:800}h1{margin:4px 0;font-size:clamp(26px,4vw,38px)}h2{margin:0 0 14px;font-size:19px}.muted{color:var(--muted)}.panel{background:rgba(21,29,50,.94);border:1px solid var(--line);border-radius:18px;padding:20px;margin:16px 0;box-shadow:0 16px 40px #0002}.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:180px}label{color:var(--muted);font-size:12px}input,select{width:100%;background:#0c1326;border:1px solid #34415f;border-radius:10px;padding:11px 12px;color:var(--text);font:inherit}button{border:0;border-radius:10px;background:var(--accent);color:white;font-weight:750;padding:11px 15px;cursor:pointer}button.secondary{background:#283550}button.danger{background:#7d2f42}button:disabled{opacity:.5;cursor:wait}.notice{padding:12px 14px;border-radius:10px;background:#0c1326;border:1px solid var(--line);margin:12px 0;white-space:pre-wrap}.notice.error{border-color:#a6475b;color:#ffb9bf}.notice.ok{border-color:#297e68;color:#aaf2d9}.hidden{display:none}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:620px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-size:12px;font-weight:700}.pill{display:inline-block;border-radius:999px;background:#24334e;padding:3px 9px;font-size:12px}.pill.good{color:var(--ok)}.pill.bad{color:#ffabb2}.right{display:flex;gap:8px;align-items:center}.foot{font-size:12px;color:var(--muted);margin-top:20px}@media(max-width:620px){main{padding:18px 12px}.panel{padding:15px}header{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">Arcade Lab · Operations</div><h1>Admin Console</h1><div class="muted">User status and audit trail for the demo platform.</div></div><button id="logout" class="secondary hidden">Sign out</button></header>
+<div id="notice" class="notice" role="status">Connect to your running API and sign in with an account provisioned with the ADMIN role.</div>
+<section class="panel" id="loginPanel"><h2>Administrator sign in</h2><form id="loginForm"><div class="row"><div class="field"><label for="apiBase">API base URL</label><input id="apiBase" type="url" value="http://localhost:8080" placeholder="https://api.example.com" required></div><div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required maxlength="254"></div><div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required maxlength="72"></div><button id="loginButton">Sign in</button></div></form><p class="muted">Session token stays in memory only and is cleared when you sign out or reload. Serve this page from the same origin as the API in production.</p></section>
+<div id="dashboard" class="hidden">
+<section class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h2>User accounts</h2><form id="searchForm" class="row"><div class="field"><label for="query">Search email</label><input id="query" maxlength="100" placeholder="name@example.com"></div><button>Search</button></form></div><div class="tablewrap"><table><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody id="users"><tr><td colspan="5" class="muted">Sign in to load accounts.</td></tr></tbody></table></div></section>
+<section class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h2>Recent audit events</h2><button id="refreshAudit" class="secondary">Refresh audit</button></div><div class="tablewrap"><table><thead><tr><th>Time</th><th>Action</th><th>Target</th><th>Reason</th><th>Change</th></tr></thead><tbody id="events"><tr><td colspan="5" class="muted">No events loaded.</td></tr></tbody></table></div></section>
+</div>
+<p class="foot">Demo-only project. No deposits, payments, withdrawals, cash-outs or real-money wagering. All admin actions must be authorized by the backend.</p>
+</main>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  let token = null;
+  let apiBase = "";
+  const notice = (message, type = "") => { $("notice").textContent = message; $("notice").className = "notice" + (type ? " " + type : ""); };
+  const showAuthed = (authed) => { $("dashboard").classList.toggle("hidden", !authed); $("logout").classList.toggle("hidden", !authed); $("loginPanel").classList.toggle("hidden", authed); };
+  const request = async (path, options = {}) => {
+    const headers = new Headers(options.headers || {});
+    if (token) headers.set("Authorization", "Bearer " + token);
+    if (options.body) headers.set("Content-Type", "application/json");
+    let response;
+    try { response = await fetch(apiBase + path, {...options, headers}); }
+    catch (_) { throw new Error("Cannot reach API. Check API URL, server status and CORS/same-origin configuration."); }
+    if (response.status === 204) return null;
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.message || ("Request failed (" + response.status + ")"));
+    return body;
+  };
+  const cell = (tr, value, className = "") => { const td = document.createElement("td"); td.textContent = value == null ? "—" : String(value); if (className) td.className = className; tr.append(td); return td; };
+  const loadUsers = async () => {
+    const tbody = $("users"); tbody.replaceChildren();
+    try {
+      const data = await request("/api/admin/users?query=" + encodeURIComponent($("query").value.trim()));
+      if (!data.users.length) { const tr = document.createElement("tr"); cell(tr, "No matching users."); tbody.append(tr); return; }
+      for (const user of data.users) {
+        const tr = document.createElement("tr");
+        cell(tr, user.email); cell(tr, user.role);
+        const status = cell(tr, user.status);
+        status.innerHTML = "";
+        const pill = document.createElement("span"); pill.className = "pill " + (user.status === "ACTIVE" ? "good" : "bad"); pill.textContent = user.status; status.append(pill);
+        cell(tr, new Date(user.createdAt).toLocaleString());
+        const actionCell = document.createElement("td");
+        const button = document.createElement("button"); button.className = user.status === "ACTIVE" ? "danger" : "secondary"; button.textContent = user.status === "ACTIVE" ? "Suspend" : "Activate";
+        button.addEventListener("click", async () => {
+          const next = user.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+          const reason = window.prompt("Required reason for setting " + user.email + " to " + next + ":");
+          if (reason === null) return;
+          if (reason.trim().length < 5) { notice("Please provide a reason of at least 5 characters.", "error"); return; }
+          button.disabled = true;
+          try {
+            await request("/api/admin/users/" + user.id + "/status", {method:"PATCH", body:JSON.stringify({status:next, reason:reason.trim()})});
+            notice("Account status updated. Audit event recorded.", "ok");
+            await Promise.all([loadUsers(), loadAudit()]);
+          } catch (e) { notice(e.message, "error"); }
+          finally { button.disabled = false; }
+        });
+        actionCell.append(button); tr.append(actionCell); tbody.append(tr);
+      }
+    } catch (e) { notice(e.message, "error"); }
+  };
+  const loadAudit = async () => {
+    const tbody = $("events"); tbody.replaceChildren();
+    try {
+      const data = await request("/api/admin/audit-events");
+      if (!data.events.length) { const tr = document.createElement("tr"); cell(tr, "No audit events yet."); tbody.append(tr); return; }
+      for (const event of data.events) {
+        const tr = document.createElement("tr");
+        cell(tr, new Date(event.createdAt).toLocaleString()); cell(tr, event.action);
+        cell(tr, event.targetType + " #" + event.targetId); cell(tr, event.reason);
+        cell(tr, (event.beforeValue || "—") + " → " + (event.afterValue || "—"));
+        tbody.append(tr);
+      }
+    } catch (e) { notice(e.message, "error"); }
+  };
+  $("loginForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = $("loginButton"); button.disabled = true;
+    apiBase = $("apiBase").value.trim().replace(/\/+$/, "");
+    try {
+      const data = await request("/api/auth/login", {method:"POST", body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})});
+      token = data.accessToken;
+      await request("/api/admin/users");
+      showAuthed(true); notice("Signed in. Session expires at " + new Date(data.expiresAt).toLocaleString() + ".", "ok");
+      $("password").value = "";
+      await Promise.all([loadUsers(), loadAudit()]);
+    } catch (e) { token = null; showAuthed(false); notice(e.message, "error"); }
+    finally { button.disabled = false; }
+  });
+  $("searchForm").addEventListener("submit", async (event) => { event.preventDefault(); await loadUsers(); });
+  $("refreshAudit").addEventListener("click", loadAudit);
+  $("logout").addEventListener("click", async () => {
+    try { if (token) await request("/api/auth/logout", {method:"POST"}); }
+    catch (_) { /* Clear local session even if the API is unreachable. */ }
+    token = null; showAuthed(false); $("password").value = ""; notice("Signed out. The session token was cleared from this page.", "ok");
+  });
+})();
+</script>
+</body></html>
