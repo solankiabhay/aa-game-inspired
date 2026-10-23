@@ -1,0 +1,76 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?Set MYSQL_DATABASE in .env.prod}
+      MYSQL_USER: ${MYSQL_USER:?Set MYSQL_USER in .env.prod}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env.prod}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env.prod}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks: [private]
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h 127.0.0.1 -uroot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    security_opt: ["no-new-privileges:true"]
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:?Set MYSQL_DATABASE in .env.prod}?useSSL=true&requireSSL=true&serverTimezone=UTC
+      DB_USERNAME: ${MYSQL_USER:?Set MYSQL_USER in .env.prod}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env.prod}
+      PORT: 8080
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks: [private, edge]
+    expose: ["8080"]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/api/health >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 6
+      start_period: 45s
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN in .env.prod}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [edge]
+    security_opt: ["no-new-privileges:true"]
+
+networks:
+  private:
+    internal: true
+  edge:
+
+volumes:
+  mysql_data:
+  caddy_data:
+  caddy_config:
