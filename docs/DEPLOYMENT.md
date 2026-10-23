@@ -24,3 +24,17 @@ The API container runs Flyway migrations on startup. The first admin account mus
 
 ## Production deployment gate
 Do not deploy this prototype directly to the public internet. Before production, add TLS/reverse proxy and security headers, secrets management, login/registration rate limiting, email verification/password recovery, unified errors, DB least-privilege users and network restrictions, automated backup/restore validation, dependency/image scanning, monitoring/alerting, load testing, privacy/legal review and a documented rollback plan. Configure resource limits and durable storage for the target platform.
+
+
+## Production Compose template
+
+The production stack is in docker-compose.prod.yml; it keeps MySQL and Redis on a private internal network, publishes only Caddy ports 80/443, enables Redis-backed shared auth throttling, runs the API as a non-root user with a read-only root filesystem, and uses Caddy for automatic HTTPS. It is a template and has not been deployed to a live host.
+
+1. Create a domain and host; allow inbound TCP 80/443 and optional UDP 443 only.
+2. Create an untracked .env.prod with APP_DOMAIN, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD and REDIS_PASSWORD. Use long unique random values and keep the file out of backups/source control.
+3. Start: docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build.
+4. Verify https://YOUR_DOMAIN/api/health, TLS certificate validity, account flows, admin authorization and rate limits from more than one API instance if scaled.
+5. Use database/backup.sh for a permission-restricted SQL backup and test database/restore.sh only on staging first. Move backups off-host and encrypt them at rest.
+6. Validate MySQL TLS negotiation and server certificate trust for your actual deployment before production.
+
+Production remains blocked until email verification/password reset, external secret management, monitoring/alerting, penetration tests, load tests and a successful backup-restore drill are completed.
