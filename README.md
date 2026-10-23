@@ -81,13 +81,15 @@ The client renders screens and sends commands; the backend validates identity, p
 ### Phase 1 — Authentication and profiles
 - [x] Registration with email validation and BCrypt password hashing.
 - [x] Login with opaque random 24-hour Bearer session token; store only SHA-256 token hash.
-- [x] Logout/revocation and profile/session validation.\n- [ ] Rate limits, password reset/verification and full role-based admin authorization.
+- [x] Logout/revocation and profile/session validation.
+- [ ] Rate limits, password reset/verification and full role-based admin authorization.
 - [x] Basic profile endpoint and auth integration tests.
 
 ### Phase 2 — Demo economy and game APIs
 - [x] Virtual-credit account and initial welcome-credit ledger entry.
 - [ ] General credit/debit operations and idempotency (credits are not currently wagered or spent).
-- [x] Persistent demo sessions and server-generated completion scores.\n- [ ] Full game-specific state machines and result validation.
+- [x] Persistent demo sessions and server-generated completion scores.
+- [ ] Full game-specific state machines and result validation.
 - [ ] Per-game rules, abuse controls and expanded deterministic game tests.
 
 ### Phase 3 — Client
