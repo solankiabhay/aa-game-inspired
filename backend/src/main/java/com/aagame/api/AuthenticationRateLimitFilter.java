@@ -80,12 +80,12 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
             try {
                 String key = "aa-game:auth-rate:" + digest(path + "|" + request.getRemoteAddr());
                 List<?> result = redis.execute(INCREMENT_WITH_TTL, List.of(key), Long.toString(windowMillis));
-                if (result == null || result.size() < 2 || !(result.get(0) instanceof Number) || !(result.get(1) instanceof Number)) {
+                if (result == null || result.size() < 2) {
                     serviceUnavailable(response);
                     return;
                 }
-                long count = ((Number) result.get(0)).longValue();
-                long ttlMillis = Math.max(1, ((Number) result.get(1)).longValue());
+                long count = numericValue(result.get(0));
+                long ttlMillis = Math.max(1, numericValue(result.get(1)));
                 if (count > limit) {
                     reject(response, Math.max(1, (ttlMillis + 999) / 1000));
                     return;
@@ -129,6 +129,12 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
 
     private static Duration positive(Duration candidate, Duration fallback) {
         return candidate == null || candidate.isZero() || candidate.isNegative() ? fallback : candidate;
+    }
+
+    private static long numericValue(Object value) {
+        if (value instanceof Number number) return number.longValue();
+        if (value instanceof String string) return Long.parseLong(string);
+        throw new IllegalStateException("Unexpected Redis rate-limit response");
     }
 
     private static String digest(String value) {
