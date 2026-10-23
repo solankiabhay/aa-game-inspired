@@ -24,11 +24,11 @@
 - Unexpected exceptions return a generic response and request ID without stack trace.
 
 ## Current validation
-- [ ] Maven build run locally/CI.
-- [ ] Unit and integration tests.
-- [ ] Docker Compose startup verified.
-- [ ] API smoke test verified.
-- [ ] Client editor build and device test.
-- [ ] Admin production build and accessibility review.
+- [x] Maven `verify` and H2-backed integration tests run in GitHub Actions.
+- [x] Tests cover catalogue, registration/login/logout, welcome-credit ledger, session lifecycle/history, admin authorization/status audit, static pages and Flyway migrations.
+- [ ] Docker Compose startup against a real MySQL container verified end-to-end.
+- [ ] Live API smoke test against MySQL verified.
+- [ ] Native Cocos Creator editor build and device test (client not implemented).
+- [ ] Production security/accessibility review.
 
 Do not check a box until a real command or test run confirms it. Record command, environment and outcome in pull request notes.
