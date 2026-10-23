@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -59,7 +58,7 @@ public class AuthController {
             jdbc.update(connection -> {
                 PreparedStatement ps = connection.prepareStatement(
                     "INSERT INTO app_users(email,password_hash,role,status) VALUES (?,?, 'USER','ACTIVE')",
-                    Statement.RETURN_GENERATED_KEYS);
+                    new String[] {"ID"});
                 ps.setString(1, email);
                 ps.setString(2, passwordHash);
                 return ps;
