@@ -8,7 +8,7 @@ From repository root:
 2. Start the database: `docker compose up -d mysql`.
 3. In `backend/`, run `mvn --batch-mode verify`.
 4. Start the API with `mvn spring-boot:run`.
-5. Check `curl http://localhost:8080/api/health` and `curl http://localhost:8080/api/games`.
+5. Open `http://localhost:8080/` for the browser client and `http://localhost:8080/admin/index.html` for the admin console.\n6. Check `curl http://localhost:8080/api/health` and `curl http://localhost:8080/api/games`.
 
 ## Implemented endpoints
 - `GET /api/health`: process health.
@@ -17,16 +17,16 @@ From repository root:
 - `POST /api/auth/login`: 256-bit opaque Bearer token, 24-hour expiry; only SHA-256 token hash stored.
 - `GET /api/auth/me`, `POST /api/auth/logout`: profile and session revocation.
 - `GET /api/auth/me/demo-credits`, `GET /api/auth/me/ledger`: virtual balance and latest ledger entries.
-- `POST /api/games/{gameId}/sessions`, `POST /api/games/sessions/{sessionId}/complete`, `GET /api/games/sessions/{sessionId}`: persistent demo session lifecycle. Score is generated on the server.
+- `POST /api/games/{gameId}/sessions`, `POST /api/games/sessions/{sessionId}/complete`, `GET /api/games/sessions/{sessionId}`: persistent demo session lifecycle. Score is generated on the server.\n- `GET /api/admin/users`, `PATCH /api/admin/users/{userId}/status`, `GET /api/admin/audit-events`: role-protected admin APIs with audit records.
 
 ## Tests and CI
-`mvn --batch-mode verify` runs the catalogue MVC test and H2-backed auth/game-session integration tests. GitHub Actions runs this command for backend changes.
+`mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks and a Flyway migration smoke test. GitHub Actions runs this command for backend changes.
 
 ## Known limitations — not production ready
 - Login rate limiting, email verification, password reset and session listing are not implemented.
 - Unified validation/error response format, correlation IDs, audit events and admin role enforcement are incomplete.
 - Game catalog is in-memory; game scores are demo simulations, not complete game engines.
-- The Cocos Creator client and admin dashboard are not runnable implementations yet.
+- A browser client and admin dashboard are served by Spring Boot; the native Cocos Creator app is not implemented yet.
 - No production deployment, TLS termination, monitoring, backup/restore test, security review or load test has been performed.
 - Demo credits are non-redeemable. There are no deposits, cash-outs, payments or real-money wagering flows.
 
