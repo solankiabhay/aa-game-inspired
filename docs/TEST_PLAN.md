@@ -21,7 +21,7 @@
 - Concurrent requests cannot drive balance negative.
 - Invalid game state transition is rejected.
 - Admin mutation creates an audit record.
-- Unexpected exceptions return a generic response and request ID without stack trace.
+- Validation and malformed requests return a generic error envelope with request ID; unexpected exception handling still needs explicit coverage.
 
 ## Current validation
 - [x] Maven `verify` and H2-backed integration tests run in GitHub Actions.
