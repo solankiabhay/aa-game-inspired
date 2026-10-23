@@ -6,10 +6,10 @@ const html = readFileSync(new URL("./index.html", import.meta.url), "utf8");
 assert.match(html, /<html lang="en">/);
 assert.match(html, /name="viewport"/);
 assert.match(html, /prefers-reduced-motion/);
-assert.match(html, //api/auth/login/);
-assert.match(html, //api/auth/register/);
-assert.match(html, //api/games/);
-assert.match(html, //api/games/sessions/);
+assert.ok(html.includes("/api/auth/login"));
+assert.ok(html.includes("/api/auth/register"));
+assert.ok(html.includes("/api/games"));
+assert.ok(html.includes("/api/games/sessions"));
 
 const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]));
 const duplicates = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]).filter((id, index, all) => all.indexOf(id) !== index);
