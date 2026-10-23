@@ -1,0 +1,11 @@
+{
+  "name": "aa-game-cocos-client",
+  "uuid": "6e11b8b6-0d67-4b93-93f8-7f2ef6c7a24b",
+  "version": "1.0.0",
+  "creator": {
+    "version": "3.8.6"
+  },
+  "description": "Original demo-game client for the AA Game platform",
+  "dependencies": {},
+  "devDependencies": {}
+}
