@@ -35,7 +35,7 @@ Defaults can be overridden with Spring properties/environment variables:
 - `APP_SECURITY_RATE_LIMIT_REGISTER_MAX_REQUESTS`
 - `APP_SECURITY_RATE_LIMIT_REGISTER_WINDOW` (for example `1h`)
 
-This limiter is in-process. Before deploying multiple API instances, configure a shared gateway or distributed rate limiter (for example Redis), and only trust forwarded client-IP headers when the reverse proxy is explicitly configured to overwrite them.
+Local development defaults to the in-process limiter. Production Compose enables a Redis-backed atomic counter with TTL shared across API instances; Redis failures fail closed with HTTP 503. Use a strong REDIS_PASSWORD. Only trust forwarded client-IP headers when the reverse proxy is explicitly configured to overwrite them.
 
 ## Tests and CI
 `mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks, rate-limit and browser-security-header unit tests, and a Flyway migration smoke test. GitHub Actions runs backend verification, CodeQL, and secret/dependency/misconfiguration scans for backend changes.
