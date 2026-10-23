@@ -22,15 +22,29 @@ From repository root:
 - `GET /api/admin/users`, `PATCH /api/admin/users/{userId}/status`, `GET /api/admin/audit-events`: role-protected admin APIs with audit records.
 - `GET /api/admin/games`, `PATCH /api/admin/games/{gameId}/config`: role-protected game configuration with audit records.
 
+## Authentication rate limits
+A built-in fixed-window filter limits public authentication POST endpoints by the direct client IP:
+- Login: 10 requests per 15 minutes.
+- Registration: 5 requests per hour.
+- Excess attempts receive HTTP 429, a `Retry-After` header, and a `RATE_LIMITED` response code.
+
+Defaults can be overridden with Spring properties/environment variables:
+- `APP_SECURITY_RATE_LIMIT_LOGIN_MAX_REQUESTS`
+- `APP_SECURITY_RATE_LIMIT_LOGIN_WINDOW` (for example `15m`)
+- `APP_SECURITY_RATE_LIMIT_REGISTER_MAX_REQUESTS`
+- `APP_SECURITY_RATE_LIMIT_REGISTER_WINDOW` (for example `1h`)
+
+This limiter is in-process. Before deploying multiple API instances, configure a shared gateway or distributed rate limiter (for example Redis), and only trust forwarded client-IP headers when the reverse proxy is explicitly configured to overwrite them.
+
 ## Tests and CI
-`mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks and a Flyway migration smoke test. GitHub Actions runs this command for backend changes.
+`mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks, rate-limit unit tests and a Flyway migration smoke test. GitHub Actions runs backend verification, CodeQL, and secret/dependency/misconfiguration scans for backend changes.
 
 ## Known limitations — not production ready
-- Login rate limiting, email verification, password reset and session listing are not implemented.
-- Unified validation/error response format, correlation IDs, audit events and admin role enforcement are incomplete.
+- Email verification, password reset, MFA, session listing and refresh-token rotation are not implemented.
+- Persistent abuse monitoring, distributed rate limiting, production security headers/CSP, external secret management and production TLS/reverse-proxy configuration remain deployment work.
 - Game catalog is in-memory; game scores are demo simulations, not complete game engines.
 - A browser client and admin dashboard are served by Spring Boot; the native Cocos Creator app is not implemented yet.
-- No production deployment, TLS termination, monitoring, backup/restore test, security review or load test has been performed.
+- No production deployment, monitoring, backup/restore rehearsal, penetration test or load test has been completed.
 - Demo credits are non-redeemable. There are no deposits, cash-outs, payments or real-money wagering flows.
 
 Never commit secrets. Keep production secrets in a secret manager, and deploy only after the security checklist is complete.
