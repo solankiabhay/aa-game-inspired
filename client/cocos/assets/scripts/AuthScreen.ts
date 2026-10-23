@@ -28,7 +28,9 @@ export class AuthScreen extends Component {
         }
         try {
             const result = await AuthService.register(email, password);
-            this.show("Account created. Demo credits: " + result.startingDemoCredits + ". Sign in to continue.");
+            this.show(result.status === "VERIFICATION_REQUIRED"
+                ? "Account created. Check your email and verify before signing in. Demo credits: " + result.startingDemoCredits + "."
+                : "Account created. Demo credits: " + result.startingDemoCredits + ". Sign in to continue.");
         } catch (error) {
             this.show(this.message(error));
         }
