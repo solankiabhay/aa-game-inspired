@@ -1,8 +1,9 @@
-# REST API Contract Plan
+# REST API Contract
 
-Base path: `/api`. JSON request/response bodies. Use HTTPS outside local development. This document describes the intended contract; endpoints marked planned do not exist until implemented.
+Base path: `/api`. JSON request/response bodies. Use HTTPS outside local development.
 
 ## Implemented
+
 ### GET /api/health
 Response:
 ```json
@@ -10,8 +11,23 @@ Response:
 ```
 This is a basic process health response, not yet a database readiness check.
 
+### GET /api/games
+Returns the public catalog of original demo-only games. No authentication is currently required.
+Example response:
+```json
+{
+  "count": 3,
+  "games": [
+    {"id":"skyline-crash","title":"Skyline Crash","category":"ARCADE","description":"Watch the multiplier rise in a simulated round.","enabled":true},
+    {"id":"neon-reels","title":"Neon Reels","category":"CASUAL","description":"A colourful slot-style demo using non-redeemable credits.","enabled":true},
+    {"id":"reef-ranger","title":"Reef Ranger","category":"ARCADE","description":"A score-chasing underwater arcade demo.","enabled":true}
+  ]
+}
+```
+This is an in-memory static catalog, not yet backed by database configuration.
+
 ## Planned authentication
-- POST `/api/auth/register` — email, password, password confirmation or client-side confirmation; server validates email/password and creates account.
+- POST `/api/auth/register` — email, password; server validates email/password and creates account.
 - POST `/api/auth/login` — email/password; returns session/access credentials according to chosen auth design.
 - POST `/api/auth/refresh` — rotates refresh credential if refresh-token sessions are selected.
 - POST `/api/auth/logout` — revokes current refresh/session token.
@@ -26,8 +42,7 @@ Never log passwords, access tokens, refresh tokens or reset tokens.
 - GET `/api/me/demo-credits` — current demo-credit balance.
 - GET `/api/me/ledger?cursor=...` — paginated ledger history.
 
-## Planned game
-- GET `/api/games` — enabled demo game catalog.
+## Planned game sessions
 - POST `/api/games/{gameId}/sessions` — start a session; requires idempotency key.
 - POST `/api/games/sessions/{sessionId}/action` — submit an allowed action for that game state.
 - GET `/api/games/sessions/{sessionId}` — retrieve authoritative session state/result.
