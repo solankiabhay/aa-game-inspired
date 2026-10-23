@@ -57,6 +57,25 @@ export class AuthScreen extends Component {
         }
     }
 
+    async requestPasswordReset(): Promise<void> {
+        if (this.busy) return;
+        const email = this.emailInput?.string.trim() ?? "";
+        if (!this.validEmail(email)) {
+            this.show("Enter your account email first.");
+            return;
+        }
+        this.busy = true;
+        this.show("Requesting password-reset instructions…");
+        try {
+            const result = await AuthService.requestPasswordReset(email);
+            this.show(result.message || "If the account exists, reset instructions will be sent.");
+        } catch (error) {
+            this.show(this.message(error));
+        } finally {
+            this.busy = false;
+        }
+    }
+
     async login(): Promise<void> {
         if (this.busy) return;
         const email = this.emailInput?.string.trim() ?? "";
