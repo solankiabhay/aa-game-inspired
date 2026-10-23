@@ -3,7 +3,11 @@ node_modules/
 build/
 dist/
 .env
+.env.*
+!.env.example
 *.log
 .DS_Store
 .idea/
 .vscode/
+backups/
+*.sql.gz
