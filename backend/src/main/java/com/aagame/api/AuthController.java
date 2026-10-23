@@ -10,9 +10,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -177,6 +181,29 @@ class ApiExceptionHandler {
     ResponseEntity<Map<String, String>> handleStatus(ResponseStatusException ex, HttpServletRequest request) {
         String message = ex.getReason() == null ? "Request could not be completed." : ex.getReason();
         return ResponseEntity.status(ex.getStatusCode()).body(Map.of(
-            "code", ex.getStatusCode().toString(), "message", message, "path", request.getRequestURI()));
+            "code", ex.getStatusCode().toString(), "message", message, "path", request.getRequestURI(),
+            "requestId", UUID.randomUUID().toString()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        var fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+            .map(error -> Map.of("field", error.getField(), "code", "INVALID_VALUE"))
+            .collect(Collectors.toList());
+        return ResponseEntity.badRequest().body(Map.of(
+            "code", "VALIDATION_ERROR",
+            "message", "Please check the submitted fields.",
+            "requestId", UUID.randomUUID().toString(),
+            "path", request.getRequestURI(),
+            "fieldErrors", fieldErrors));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<Map<String, String>> handleMalformedJson(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "code", "MALFORMED_REQUEST",
+            "message", "The request body is missing or invalid.",
+            "requestId", UUID.randomUUID().toString(),
+            "path", request.getRequestURI()));
     }
 }
