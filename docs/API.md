@@ -38,7 +38,7 @@ These are demo simulation endpoints, not production game mechanics. Demo credits
 ### Admin
 - GET `/api/admin/users?query=...` — returns at most 100 matching users.
 - PATCH `/api/admin/users/{userId}/status` — sets status to `ACTIVE` or `SUSPENDED`, requires a reason, revokes sessions on suspension, and writes an audit event.
-- GET `/api/admin/audit-events` — latest 100 audit events.
+- GET `/api/admin/audit-events` — latest 100 audit events.\n- GET `/api/admin/games` — list configured games.\n- PATCH `/api/admin/games/{gameId}/config` — update title, description and enabled status; requires a reason and creates an audit event.
 
 Admin endpoints require a valid session for a database-provisioned `ADMIN` role. There is deliberately no public endpoint to grant admin privileges. Bootstrap the first administrator manually using the restricted database runbook; never expose a default admin password in source code.
 
@@ -46,7 +46,7 @@ Admin endpoints require a valid session for a database-provisioned `ADMIN` role.
 - Rate limiting and abuse controls for registration/login.
 - Email verification, password reset, refresh tokens, and stronger account recovery.
 - Standardized validation/malformed-JSON error envelopes are implemented; complete coverage for all unexpected exceptions remains.
-- Admin game configuration endpoints and richer dashboard features.
+- Admin pagination, richer confirmation dialogs, MFA/SSO and production accessibility review.
 
 ## Database
 Flyway migrations are under `backend/src/main/resources/db/migration`: V1 users/sessions, V2 demo-credit ledger/game sessions, V3 admin audit events.
