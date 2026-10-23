@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arcade Lab · Demo Games</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151d32;--line:#2a3652;--text:#edf2ff;--muted:#9ba9c8;--accent:#8b7cff;--mint:#61d6ad;--orange:#ffb36b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1b2550 0,transparent 55%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:1050px;margin:auto;padding:24px 16px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;display:grid;place-items:center;background:linear-gradient(135deg,#8b7cff,#61d6ad);border-radius:14px;font-size:22px}.eyebrow{color:#aaa0ff;text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:800}h1{margin:3px 0;font-size:clamp(27px,5vw,44px);letter-spacing:-.04em}h2{margin:0 0 12px;font-size:20px}p{margin:8px 0}.muted{color:var(--muted)}.panel{margin-top:18px;padding:20px;border:1px solid var(--line);border-radius:18px;background:rgba(21,29,50,.92);box-shadow:0 15px 40px #0002}.hidden{display:none!important}.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:180px}label{font-size:12px;color:var(--muted)}input{width:100%;background:#0c1326;border:1px solid #34415f;border-radius:10px;padding:12px;color:var(--text);font:inherit}button{border:0;border-radius:11px;padding:11px 15px;background:var(--accent);color:white;font:inherit;font-weight:750;cursor:pointer}button.secondary{background:#293651}button:disabled{opacity:.5;cursor:wait}.status{padding:12px 14px;border:1px solid var(--line);background:#0c1326;border-radius:12px;margin-top:14px;white-space:pre-wrap}.status.error{border-color:#a6475b;color:#ffb9bf}.status.ok{border-color:#297e68;color:#aaf2d9}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.game{border:1px solid var(--line);background:linear-gradient(160deg,#1a2644,#11182b);border-radius:16px;padding:17px;display:flex;flex-direction:column;min-height:205px}.emoji{font-size:30px}.game h3{margin:8px 0 4px}.game p{color:var(--muted);flex:1}.tag{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mint);font-weight:800}.wallet{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.balance{font-size:30px;font-weight:850;letter-spacing:-.04em}.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sessionbox{border-radius:14px;background:#0c1326;border:1px solid #34415f;padding:18px}.score{font-size:42px;font-weight:850;color:var(--mint)}ul{padding-left:20px;color:var(--muted)}.foot{font-size:12px;color:var(--muted);margin-top:20px}@media(max-width:760px){.grid{grid-template-columns:1fr}.cols{grid-template-columns:1fr}.panel{padding:15px}.top{align-items:flex-start}.top .muted{max-width:210px}}
+</style>
+</head>
+<body><main>
+<header class="top"><div class="brand"><div class="logo">✦</div><div><div class="eyebrow">Original mini-games · Demo only</div><h1>Arcade Lab</h1></div></div><div id="account" class="muted">Not signed in</div></header>
+<div id="notice" class="status">Create a demo account or sign in. New accounts receive 1,000 simulated credits with no monetary value.</div>
+<section id="auth" class="panel"><h2>Welcome to the arcade</h2><div class="row"><form id="loginForm" class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" autocomplete="username" maxlength="254" required><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="72" required><button>Sign in</button></form><form id="registerForm" class="field"><label for="registerEmail">Create account · Email</label><input id="registerEmail" type="email" autocomplete="email" maxlength="254" required><label for="registerPassword">Password · at least 12 characters</label><input id="registerPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required><button>Create account</button></form></div></section>
+<div id="app" class="hidden">
+<section class="panel wallet"><div><div class="eyebrow">Your virtual wallet</div><div class="balance"><span id="balance">—</span> <span style="font-size:14px;color:var(--muted)">DEMO CREDITS</span></div><div class="muted">Simulated only · Not redeemable or transferable</div></div><div class="row"><button id="refresh">Refresh balance</button><button id="logout" class="secondary">Sign out</button></div></section>
+<section class="panel"><div class="eyebrow">Pick a game</div><h2>Choose your next round</h2><div id="games" class="grid"><p class="muted">Loading games…</p></div></section>
+<section id="playPanel" class="panel hidden"><div class="eyebrow">Game session</div><h2 id="playTitle">Your round</h2><div class="cols"><div class="sessionbox"><div id="sessionStatus" class="tag">READY</div><div id="score" class="score">—</div><p id="sessionMessage" class="muted">Start a session, then finish it to receive a server-generated demo score.</p><div class="row"><button id="startSession">Start round</button><button id="completeSession" disabled>Finish round</button></div></div><div><h2>Recent rounds</h2><ul id="history"><li>No rounds yet in this page session.</li></ul><p class="muted">Scores are simulated by the server. Credits are not staked or consumed.</p></div></div></section>
+<section class="panel"><div class="eyebrow">Account activity</div><h2>Demo-credit ledger</h2><div id="ledger" class="muted">Sign in to view your latest entries.</div></section>
+</div>
+<p class="foot">Arcade Lab is an educational demo. No deposits, payments, cash-outs, withdrawals, or real-money wagering. Do not reuse passwords from other services.</p>
+</main>
+<script>
+(() => {
+ const $ = id => document.getElementById(id);
+ let token = null, activeGame = null, activeSession = null, rounds = [];
+ const api = async (path, options = {}) => {
+   const headers = new Headers(options.headers || {});
+   if (token) headers.set("Authorization", "Bearer " + token);
+   if (options.body) headers.set("Content-Type", "application/json");
+   const response = await fetch(path, {...options, headers});
+   if (response.status === 204) return null;
+   const body = await response.json().catch(() => ({}));
+   if (!response.ok) throw new Error(body.message || "Request failed (" + response.status + ")");
+   return body;
+ };
+ const notice = (message, type = "") => { $("notice").textContent = message; $("notice").className = "status" + (type ? " " + type : ""); };
+ const enter = async () => {
+   $("auth").classList.add("hidden"); $("app").classList.remove("hidden");
+   const me = await api("/api/auth/me");
+   $("account").textContent = me.email;
+   await Promise.all([loadGames(), loadBalance(), loadLedger()]);
+ };
+ const loadBalance = async () => { const data = await api("/api/auth/me/demo-credits"); $("balance").textContent = data.balance.toLocaleString(); };
+ const loadLedger = async () => {
+   const data = await api("/api/auth/me/ledger");
+   const container = $("ledger"); container.replaceChildren();
+   if (!data.entries.length) { container.textContent = "No ledger entries yet."; return; }
+   const table = document.createElement("table");
+   const head = document.createElement("tr");
+   ["When","Reason","Change","Balance"].forEach(label => { const th = document.createElement("th"); th.textContent = label; head.append(th); });
+   const thead = document.createElement("thead"); thead.append(head); table.append(thead);
+   const tbody = document.createElement("tbody");
+   for (const item of data.entries) {
+     const tr = document.createElement("tr");
+     [new Date(item.createdAt).toLocaleString(),item.reason,(item.delta > 0 ? "+" : "") + item.delta,item.balanceAfter].forEach(value => { const td = document.createElement("td"); td.textContent = String(value); tr.append(td); });
+     tbody.append(tr);
+   }
+   table.append(tbody); container.className = "tablewrap"; container.append(table);
+ };
+ const loadGames = async () => {
+   const data = await api("/api/games"); const container = $("games"); container.replaceChildren();
+   const icons = {"skyline-crash":"🌆","neon-reels":"🎛️","reef-ranger":"🐠"};
+   for (const game of data.games.filter(g => g.enabled)) {
+     const card = document.createElement("article"); card.className = "game";
+     const icon = document.createElement("div"); icon.className = "emoji"; icon.textContent = icons[game.id] || "✦";
+     const tag = document.createElement("div"); tag.className = "tag"; tag.textContent = game.category;
+     const title = document.createElement("h3"); title.textContent = game.title;
+     const desc = document.createElement("p"); desc.textContent = game.description;
+     const button = document.createElement("button"); button.textContent = "Play demo";
+     button.addEventListener("click", () => { activeGame = game; activeSession = null; $("playPanel").classList.remove("hidden"); $("playTitle").textContent = game.title; $("sessionStatus").textContent = "READY"; $("score").textContent = "—"; $("sessionMessage").textContent = "Start a new simulated session. No credits are spent."; $("startSession").disabled = false; $("completeSession").disabled = true; $("playPanel").scrollIntoView({behavior:"smooth",block:"start"}); });
+     card.append(icon,tag,title,desc,button); container.append(card);
+   }
+ };
+ const refreshHistory = () => {
+   const list = $("history"); list.replaceChildren();
+   if (!rounds.length) { const li = document.createElement("li"); li.textContent = "No rounds yet in this page session."; list.append(li); return; }
+   rounds.slice(0,8).forEach(round => { const li = document.createElement("li"); li.textContent = round.title + " · score " + round.score + " · " + new Date(round.at).toLocaleTimeString(); list.append(li); });
+ };
+ $("loginForm").addEventListener("submit", async event => {
+   event.preventDefault();
+   try { const data = await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("loginEmail").value.trim(),password:$("loginPassword").value})}); token = data.accessToken; await enter(); $("loginPassword").value = ""; notice("Signed in. Your session expires at " + new Date(data.expiresAt).toLocaleString() + ".", "ok"); }
+   catch (error) { token = null; notice(error.message,"error"); }
+ });
+ $("registerForm").addEventListener("submit", async event => {
+   event.preventDefault();
+   try {
+     await api("/api/auth/register",{method:"POST",body:JSON.stringify({email:$("registerEmail").value.trim(),password:$("registerPassword").value})});
+     const data = await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("registerEmail").value.trim(),password:$("registerPassword").value})});
+     token = data.accessToken; await enter(); $("registerPassword").value = ""; notice("Account created. 1,000 demo credits added. These have no cash value.", "ok");
+   } catch (error) { token = null; notice(error.message,"error"); }
+ });
+ $("startSession").addEventListener("click", async () => {
+   if (!activeGame) return;
+   $("startSession").disabled = true;
+   try {
+     const data = await api("/api/games/" + encodeURIComponent(activeGame.id) + "/sessions",{method:"POST"});
+     activeSession = data.sessionId; $("sessionStatus").textContent = "IN PROGRESS"; $("score").textContent = "…"; $("sessionMessage").textContent = "Round created by the server. Finish to record the simulated score."; $("completeSession").disabled = false;
+   } catch (error) { notice(error.message,"error"); $("startSession").disabled = false; }
+ });
+ $("completeSession").addEventListener("click", async () => {
+   if (!activeSession) return;
+   $("completeSession").disabled = true;
+   try {
+     const data = await api("/api/games/sessions/" + encodeURIComponent(activeSession) + "/complete",{method:"POST"});
+     $("sessionStatus").textContent = "COMPLETED"; $("score").textContent = String(data.score); $("sessionMessage").textContent = "Round saved. This score is a server-side demo simulation."; $("startSession").disabled = false;
+     rounds.unshift({title:activeGame.title,score:data.score,at:Date.now()}); refreshHistory(); await loadBalance(); notice("Demo round completed successfully.", "ok");
+   } catch (error) { notice(error.message,"error"); $("completeSession").disabled = false; }
+ });
+ $("refresh").addEventListener("click", async () => { try { await Promise.all([loadBalance(),loadLedger()]); notice("Wallet and ledger refreshed.","ok"); } catch(e) { notice(e.message,"error"); } });
+ $("logout").addEventListener("click", async () => { try { await api("/api/auth/logout",{method:"POST"}); } catch (_) {} token = null; activeSession = null; $("app").classList.add("hidden"); $("auth").classList.remove("hidden"); $("account").textContent = "Not signed in"; $("ledger").textContent = "Sign in to view your latest entries."; notice("Signed out. Session token cleared from memory.","ok"); });
+})();
+</script>
+</body></html>
