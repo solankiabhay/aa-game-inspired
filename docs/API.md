@@ -5,75 +5,51 @@ Base path: `/api`. JSON request/response bodies. Use HTTPS outside local develop
 ## Implemented
 
 ### GET /api/health
-Response:
-```json
-{"status":"UP","service":"aa-game-api"}
-```
-This is a basic process health response, not yet a database readiness check.
+Returns `{"status":"UP","service":"aa-game-api"}`. Process health only; not a database readiness check.
 
 ### GET /api/games
-Returns the public catalog of original demo-only games. No authentication is currently required.
-Example response:
+Returns the static public catalog of three original demo-only games. Catalogue is currently in memory, not database-configurable.
+
+### Authentication and user data
+- POST `/api/auth/register` — validates email and a 12–72 character password, stores a BCrypt password hash, creates a user, and atomically grants 1,000 non-redeemable demo credits with a ledger entry.
+- POST `/api/auth/login` — returns an opaque 256-bit random Bearer token with a 24-hour expiry. Only its SHA-256 hash is stored in the database.
+- GET `/api/auth/me` — authenticated profile.
+- POST `/api/auth/logout` — revokes the presented session token.
+- GET `/api/auth/me/demo-credits` — authenticated demo-credit balance and `redeemable:false`.
+- GET `/api/auth/me/ledger` — latest 100 demo-credit ledger entries.
+
+Example registration:
 ```json
-{
-  "count": 3,
-  "games": [
-    {"id":"skyline-crash","title":"Skyline Crash","category":"ARCADE","description":"Watch the multiplier rise in a simulated round.","enabled":true},
-    {"id":"neon-reels","title":"Neon Reels","category":"CASUAL","description":"A colourful slot-style demo using non-redeemable credits.","enabled":true},
-    {"id":"reef-ranger","title":"Reef Ranger","category":"ARCADE","description":"A score-chasing underwater arcade demo.","enabled":true}
-  ]
-}
+{"email":"player@example.com","password":"StrongPassword123!"}
 ```
-This is an in-memory static catalog, not yet backed by database configuration.
+Example login response:
+```json
+{"accessToken":"opaque-token","tokenType":"Bearer","expiresAt":"ISO-8601 timestamp"}
+```
+Send the returned token as `Authorization: Bearer <token>`. Never log passwords or session tokens.
 
-## Planned authentication
-- POST `/api/auth/register` — email, password; server validates email/password and creates account.
-- POST `/api/auth/login` — email/password; returns session/access credentials according to chosen auth design.
-- POST `/api/auth/refresh` — rotates refresh credential if refresh-token sessions are selected.
-- POST `/api/auth/logout` — revokes current refresh/session token.
-- POST `/api/auth/password/forgot` — always returns a generic response to reduce account enumeration.
-- POST `/api/auth/password/reset` — validates a one-time, expiring reset token.
+### Game sessions
+- POST `/api/games/{gameId}/sessions` — authenticated session start for `skyline-crash`, `neon-reels`, or `reef-ranger`.
+- POST `/api/games/sessions/{sessionId}/complete` — completes an active session; score is generated server-side and cannot be chosen by the client. A completed session cannot be completed again.
+- GET `/api/games/sessions/{sessionId}` — retrieves a session belonging to the authenticated user.
 
-Never log passwords, access tokens, refresh tokens or reset tokens.
+These are demo simulation endpoints, not production game mechanics. Demo credits are not wagered, transferred, sold or redeemable.
 
-## Planned user
-- GET `/api/me` — current user profile.
-- PATCH `/api/me` — only explicitly allowed profile fields.
-- GET `/api/me/demo-credits` — current demo-credit balance.
-- GET `/api/me/ledger?cursor=...` — paginated ledger history.
+## Planned authentication hardening
+- Rate limiting and abuse controls for registration/login.
+- Email verification, password reset, session listing/revocation, refresh tokens, and stronger account recovery.
+- Standardized validation error response for every exception type.
 
-## Planned game sessions
-- POST `/api/games/{gameId}/sessions` — start a session; requires idempotency key.
-- POST `/api/games/sessions/{sessionId}/action` — submit an allowed action for that game state.
-- GET `/api/games/sessions/{sessionId}` — retrieve authoritative session state/result.
-
-Game-specific validation must reject illegal state transitions and out-of-range inputs. The client cannot choose a result, payout or final balance.
-
-## Planned admin (role required)
+## Planned admin
 - GET `/api/admin/users?query=...`
 - PATCH `/api/admin/users/{userId}/status`
 - GET/PATCH `/api/admin/games` and `/api/admin/games/{gameId}/config`
 - GET `/api/admin/audit-events`
 
-Admin mutations require authorization, validation, an audit event and a reason where appropriate.
+Admin mutations must enforce an admin role, validate changes and record audit events. These endpoints are not implemented.
 
-## Error format
-Use a stable structure such as:
-```json
-{
-  "code": "VALIDATION_ERROR",
-  "message": "Please check the submitted fields.",
-  "requestId": "correlation-id",
-  "fieldErrors": [{"field":"email","code":"INVALID_FORMAT"}]
-}
-```
-Do not return stack traces, SQL errors, internal class names or secrets. Use appropriate HTTP status codes (400 validation, 401 unauthenticated, 403 forbidden, 404 absent resource, 409 conflict, 429 rate limited, 5xx unexpected server failure).
+## Error handling
+Known business errors use HTTP status codes such as 401 unauthenticated, 404 missing resource, 409 conflict, and 400 validation. Do not return stack traces, SQL errors or secrets. Validation errors still need a unified production-grade response format.
 
-## API implementation checklist
-- DTOs and Bean Validation
-- central exception handler
-- consistent request IDs
-- authentication and role enforcement
-- pagination limits
-- idempotency for mutation endpoints
-- OpenAPI spec and integration tests after initial controllers are implemented
+## Database
+Flyway migrations are under `backend/src/main/resources/db/migration`. Migration V1 creates users and hashed sessions; V2 creates the demo-credit ledger and game-session tables.
