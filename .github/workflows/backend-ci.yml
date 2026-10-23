@@ -5,6 +5,7 @@ on:
     paths:
       - "backend/**"
       - "client/web/**"
+      - "client/cocos/**"
       - "admin/**"
       - "docker-compose.yml"
       - ".env.example"
