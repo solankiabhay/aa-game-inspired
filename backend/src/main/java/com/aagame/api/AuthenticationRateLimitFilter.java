@@ -70,16 +70,18 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         if (!"POST".equalsIgnoreCase(request.getMethod())) return true;
         String path = request.getRequestURI();
-        return !"/api/auth/login".equals(path) && !"/api/auth/register".equals(path);
+        return !"/api/auth/login".equals(path) && !"/api/auth/register".equals(path)
+            && !"/api/auth/verify-email".equals(path) && !"/api/auth/password-reset/request".equals(path)
+            && !"/api/auth/password-reset/confirm".equals(path);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String path = request.getRequestURI();
-        boolean login = "/api/auth/login".equals(path);
-        int limit = login ? loginMaxRequests : registerMaxRequests;
-        long windowMillis = (login ? loginWindow : registerWindow).toMillis();
+        boolean stricterLimit = usesLoginWindow(path);
+        int limit = stricterLimit ? loginMaxRequests : registerMaxRequests;
+        long windowMillis = (stricterLimit ? loginWindow : registerWindow).toMillis();
         long retryAfter;
 
         if (redisEnabled) {
@@ -128,9 +130,14 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
         long now = System.currentTimeMillis();
         windows.entrySet().removeIf(entry -> {
             String path = entry.getKey().substring(0, entry.getKey().indexOf('|'));
-            long ttl = "/api/auth/login".equals(path) ? loginWindow.toMillis() : registerWindow.toMillis();
+            long ttl = usesLoginWindow(path) ? loginWindow.toMillis() : registerWindow.toMillis();
             return now - entry.getValue().startedAtMillis >= ttl;
         });
+    }
+
+    private static boolean usesLoginWindow(String path) {
+        return "/api/auth/login".equals(path) || "/api/auth/verify-email".equals(path)
+            || "/api/auth/password-reset/confirm".equals(path);
     }
 
     private static Duration positive(Duration candidate, Duration fallback) {
