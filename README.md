@@ -8,7 +8,7 @@ An original educational demo-game platform using a Spring Boot API, MySQL, brows
 
 Implemented and CI-tested:
 - Java 21 / Spring Boot API with MySQL and Flyway migrations.
-- Email/password registration and login, BCrypt password hashing, opaque 24-hour sessions stored as hashes, logout and profile APIs.
+- Email/password registration and login, BCrypt password hashing, opaque 24-hour sessions stored as hashes, logout/profile APIs, configurable email verification, and one-time password reset with session revocation.
 - Non-redeemable demo credits and ledger, server-generated demo game sessions.
 - Role-protected admin endpoints and audit events.
 - Browser client and admin console.
@@ -42,4 +42,4 @@ See docs/DEPLOYMENT.md and deploy/README.md. The template is not a live deployme
 
 ## Important remaining release gates
 
-This is not production-ready yet. Email verification/password reset, MFA, distributed rate limiting, CSP tuned for the UI, SMTP setup, secrets manager integration, production penetration/load tests, monitored backup restore drills, and a real Cocos Creator editor build/device test remain. Do not expose the prototype publicly until these are addressed.
+This is not production-ready yet. MFA, refresh-token rotation, SMTP provider staging validation, external secrets manager integration, monitoring/alerting, production penetration/load tests, monitored backup-restore drills, and a real Cocos Creator editor build/device test remain. The production template enables verification/reset only after SMTP settings are supplied. Do not expose the prototype publicly until these are addressed.
