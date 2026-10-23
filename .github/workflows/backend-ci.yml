@@ -99,7 +99,7 @@ jobs:
           done
           CODE=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST http://127.0.0.1:8080/api/auth/login -H 'Content-Type: application/json' -d '{"email":"ci-player@example.com","password":"IncorrectPassword123!"}')
           test "$CODE" = "429"
-          docker run --rm --network host -e BASE_URL=http://127.0.0.1:8080 -e VUS=5 -e DURATION=10s -v "$GITHUB_WORKSPACE/loadtest/auth-smoke.js:/scripts/auth-smoke.js:ro" grafana/k6 run /scripts/auth-smoke.js
+          docker run --rm --network host -e BASE_URL=http://127.0.0.1:8080 -e VUS=5 -e DURATION=10s -v "$GITHUB_WORKSPACE/loadtest/auth-smoke.js:/scripts/auth-smoke.js:ro" grafana/k6:0.56.0 run /scripts/auth-smoke.js
       - name: Build container image
         run: docker build --tag aa-game-api:ci .
       - name: Run container against MySQL
