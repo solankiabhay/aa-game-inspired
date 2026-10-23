@@ -31,7 +31,7 @@ Send the returned token as `Authorization: Bearer <token>`. Never log passwords 
 ### Game sessions
 - POST `/api/games/{gameId}/sessions` — authenticated session start for `skyline-crash`, `neon-reels`, or `reef-ranger`.
 - POST `/api/games/sessions/{sessionId}/complete` — completes an active session; score is generated server-side and cannot be chosen by the client. A completed session cannot be completed again.
-- GET `/api/games/sessions/{sessionId}` — retrieves a session belonging to the authenticated user.
+- GET `/api/games/sessions?limit=20` — lists the authenticated user’s latest sessions (limit capped at 100).\n- GET `/api/games/sessions/{sessionId}` — retrieves a session belonging to the authenticated user.
 
 These are demo simulation endpoints, not production game mechanics. Demo credits are not wagered, transferred, sold or redeemable.
 
