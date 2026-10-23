@@ -63,7 +63,7 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
 
     // Convenient constructor for isolated unit tests that intentionally use the in-memory fallback.
     AuthenticationRateLimitFilter(int loginMaxRequests, Duration loginWindow, int registerMaxRequests, Duration registerWindow) {
-        this(loginMaxRequests, loginWindow, registerMaxRequests, registerWindow, false, null);
+        this(loginMaxRequests, loginWindow, registerMaxRequests, registerWindow, false, (StringRedisTemplate) null);
     }
 
     @Override
