@@ -47,7 +47,7 @@ Local development defaults to the in-process limiter. Production Compose enables
 - MFA, refresh-token rotation and session listing are not implemented. SMTP delivery, verification/reset links and token-expiry behavior still need provider-specific staging validation.
 - Persistent abuse monitoring, distributed rate limiting, production security headers/CSP, external secret management and production TLS/reverse-proxy configuration remain deployment work.
 - Game catalog is in-memory; game scores are demo simulations, not complete game engines.
-- A browser client and admin dashboard are served by Spring Boot; the native Cocos Creator app is not implemented yet.
+- A browser client and admin dashboard are served by Spring Boot; a Cocos Creator TypeScript project scaffold exists, but editor import, scenes/prefabs, native builds and device testing are not verified.
 - No production deployment, monitoring, backup/restore rehearsal, penetration test or load test has been completed.
 - Demo credits are non-redeemable. There are no deposits, cash-outs, payments or real-money wagering flows.
 
