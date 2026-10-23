@@ -30,6 +30,18 @@ export class AuthService {
         return session;
     }
 
+    static async verifyEmail(token: string): Promise<{status: string; message: string}> {
+        return ApiClient.post<{status: string; message: string}>("/api/auth/verify-email", { token });
+    }
+
+    static async requestPasswordReset(email: string): Promise<{status: string; message: string}> {
+        return ApiClient.post<{status: string; message: string}>("/api/auth/password-reset/request", { email: email.trim() });
+    }
+
+    static async confirmPasswordReset(token: string, newPassword: string): Promise<{status: string; message: string}> {
+        return ApiClient.post<{status: string; message: string}>("/api/auth/password-reset/confirm", { token, newPassword });
+    }
+
     static async profile(): Promise<UserProfile> {
         return ApiClient.get<UserProfile>("/api/auth/me");
     }
