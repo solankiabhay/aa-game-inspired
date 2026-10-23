@@ -40,7 +40,7 @@ services:
     tmpfs:
       - /tmp:size=64m,noexec,nosuid
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/api/health >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/api/health >/dev/null || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 6
