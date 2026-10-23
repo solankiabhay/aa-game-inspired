@@ -38,6 +38,16 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     defaults:
       run:
         working-directory: backend
@@ -61,6 +71,9 @@ jobs:
           DB_USERNAME: aa_game
           DB_PASSWORD: testpassword
           PORT: 8080
+          SPRING_DATA_REDIS_HOST: 127.0.0.1
+          SPRING_DATA_REDIS_PORT: 6379
+          APP_SECURITY_RATE_LIMIT_REDIS_ENABLED: "true"
         run: |
           java -jar target/aa-game-api-0.1.0-SNAPSHOT.jar > /tmp/aa-game-api.log 2>&1 &
           APP_PID=$!
@@ -80,6 +93,12 @@ jobs:
           SESSION=$(curl --silent --show-error --fail -X POST http://127.0.0.1:8080/api/games/skyline-crash/sessions -H "Authorization: Bearer $TOKEN")
           SESSION_ID=$(printf '%s' "$SESSION" | jq -r '.sessionId')
           curl --silent --show-error --fail -X POST "http://127.0.0.1:8080/api/games/sessions/$SESSION_ID/complete" -H "Authorization: Bearer $TOKEN" | jq -e '.status == "COMPLETED"' >/dev/null
+          for attempt in $(seq 1 9); do
+            CODE=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST http://127.0.0.1:8080/api/auth/login -H 'Content-Type: application/json' -d '{"email":"ci-player@example.com","password":"IncorrectPassword123!"}')
+            test "$CODE" = "401"
+          done
+          CODE=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST http://127.0.0.1:8080/api/auth/login -H 'Content-Type: application/json' -d '{"email":"ci-player@example.com","password":"IncorrectPassword123!"}')
+          test "$CODE" = "429"
       - name: Build container image
         run: docker build --tag aa-game-api:ci .
       - name: Run container against MySQL
