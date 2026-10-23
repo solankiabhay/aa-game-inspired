@@ -42,10 +42,12 @@ public class AuthController {
     private static final long STARTING_DEMO_CREDITS = 1000;
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
+    private final String dummyPasswordHash;
 
     public AuthController(JdbcTemplate jdbc, PasswordEncoder passwordEncoder) {
         this.jdbc = jdbc;
         this.passwordEncoder = passwordEncoder;
+        this.dummyPasswordHash = passwordEncoder.encode("not-a-real-user-password-for-timing");
     }
 
     @Transactional
@@ -79,8 +81,9 @@ public class AuthController {
         String email = normalizeEmail(request.email());
         var users = jdbc.query("SELECT id,password_hash,status FROM app_users WHERE email = ?",
             (rs, row) -> new UserRow(rs.getLong("id"), null, null, rs.getString("status"), rs.getString("password_hash")), email);
-        if (users.isEmpty() || !"ACTIVE".equals(users.get(0).status())
-            || !passwordEncoder.matches(request.password(), users.isEmpty() ? passwordEncoder.encode("invalid-placeholder") : users.get(0).passwordHash())) {
+        String hashToCheck = users.isEmpty() ? dummyPasswordHash : users.get(0).passwordHash();
+        boolean passwordMatches = passwordEncoder.matches(request.password(), hashToCheck);
+        if (users.isEmpty() || !"ACTIVE".equals(users.get(0).status()) || !passwordMatches) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password.");
         }
         UserRow user = users.get(0);
