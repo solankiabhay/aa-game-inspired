@@ -47,6 +47,8 @@ class AuthenticationRateLimitFilterTest {
         MockHttpServletResponse limited = invoke(filter, "/api/auth/register", "198.51.100.20");
         assertEquals(429, limited.getStatus());
         assertEquals("application/json", limited.getContentType());
+        assertEquals(200, invoke(filter, "/api/auth/password-reset/request", "198.51.100.20").getStatus());
+        assertEquals(429, invoke(filter, "/api/auth/password-reset/request", "198.51.100.20").getStatus());
     }
 
     @Test
