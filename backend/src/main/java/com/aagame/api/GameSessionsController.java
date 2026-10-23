@@ -63,6 +63,30 @@ public class GameSessionsController {
             "status", "COMPLETED", "score", score, "finishedAt", finishedAt.toInstant().toString());
     }
 
+
+    @GetMapping("/sessions")
+    public Map<String, Object> listSessions(
+            @RequestHeader(name = "Authorization", required = false) String authorization,
+            @org.springframework.web.bind.annotation.RequestParam(name = "limit", defaultValue = "20") int requestedLimit) {
+        long userId = userId(authorization);
+        int limit = Math.max(1, Math.min(requestedLimit, 100));
+        var sessions = jdbc.query("""
+            SELECT id,game_id,status,score,created_at,finished_at
+            FROM game_sessions WHERE user_id=? ORDER BY created_at DESC LIMIT ?
+            """, (rs, row) -> {
+                Map<String, Object> value = new java.util.LinkedHashMap<>();
+                value.put("sessionId", rs.getString("id"));
+                value.put("gameId", rs.getString("game_id"));
+                value.put("status", rs.getString("status"));
+                value.put("score", rs.getLong("score"));
+                value.put("createdAt", rs.getTimestamp("created_at").toInstant().toString());
+                var finished = rs.getTimestamp("finished_at");
+                value.put("finishedAt", finished == null ? null : finished.toInstant().toString());
+                return value;
+            }, userId, limit);
+        return Map.of("sessions", sessions, "limit", limit);
+    }
+
     @GetMapping("/sessions/{sessionId}")
     public Map<String, Object> getSession(@PathVariable String sessionId,
                                           @RequestHeader(name = "Authorization", required = false) String authorization) {
