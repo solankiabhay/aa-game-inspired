@@ -15,6 +15,7 @@
 <section class="panel" id="loginPanel"><h2>Administrator sign in</h2><form id="loginForm"><div class="row"><div class="field"><label for="apiBase">API base URL</label><input id="apiBase" type="url" value="" placeholder="Leave blank to use this site origin"></div><div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required maxlength="254"></div><div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required maxlength="72"></div><button id="loginButton">Sign in</button></div></form><p class="muted">Session token stays in memory only and is cleared when you sign out or reload. Serve this page from the same origin as the API in production.</p></section>
 <div id="dashboard" class="hidden">
 <section class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h2>User accounts</h2><form id="searchForm" class="row"><div class="field"><label for="query">Search email</label><input id="query" maxlength="100" placeholder="name@example.com"></div><button>Search</button></form></div><div class="tablewrap"><table><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody id="users"><tr><td colspan="5" class="muted">Sign in to load accounts.</td></tr></tbody></table></div></section>
+<section class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h2>Game configuration</h2><button id="refreshGames" class="secondary">Refresh games</button></div><div class="tablewrap"><table><thead><tr><th>Game</th><th>Category</th><th>Enabled</th><th>Updated</th><th>Action</th></tr></thead><tbody id="games"><tr><td colspan="5" class="muted">No games loaded.</td></tr></tbody></table></div><p class="muted">Edit the display title and description or enable/disable a demo. Each change requires a reason and creates an audit event.</p></section>
 <section class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h2>Recent audit events</h2><button id="refreshAudit" class="secondary">Refresh audit</button></div><div class="tablewrap"><table><thead><tr><th>Time</th><th>Action</th><th>Target</th><th>Reason</th><th>Change</th></tr></thead><tbody id="events"><tr><td colspan="5" class="muted">No events loaded.</td></tr></tbody></table></div></section>
 </div>
 <p class="foot">Demo-only project. No deposits, payments, withdrawals, cash-outs or real-money wagering. All admin actions must be authorized by the backend.</p>
@@ -62,7 +63,7 @@
           try {
             await request("/api/admin/users/" + user.id + "/status", {method:"PATCH", body:JSON.stringify({status:next, reason:reason.trim()})});
             notice("Account status updated. Audit event recorded.", "ok");
-            await Promise.all([loadUsers(), loadAudit()]);
+            await Promise.all([loadUsers(), loadGames(), loadAudit()]);
           } catch (e) { notice(e.message, "error"); }
           finally { button.disabled = false; }
         });
@@ -70,6 +71,49 @@
       }
     } catch (e) { notice(e.message, "error"); }
   };
+
+  const loadGames = async () => {
+    const tbody = $("games"); tbody.replaceChildren();
+    try {
+      const data = await request("/api/admin/games");
+      for (const game of data.games) {
+        const tr = document.createElement("tr");
+        cell(tr, game.title + " (" + game.id + ")");
+        cell(tr, game.category);
+        const enabledCell = cell(tr, game.enabled ? "ENABLED" : "DISABLED");
+        const pill = document.createElement("span"); pill.className = "pill " + (game.enabled ? "good" : "bad"); pill.textContent = game.enabled ? "ENABLED" : "DISABLED"; enabledCell.replaceChildren(pill);
+        cell(tr, new Date(game.updatedAt).toLocaleString());
+        const actionCell = document.createElement("td");
+        const edit = document.createElement("button"); edit.className = "secondary"; edit.textContent = "Edit";
+        edit.addEventListener("click", async () => {
+          const title = window.prompt("Display title:", game.title); if (title === null) return;
+          const description = window.prompt("Description:", game.description); if (description === null) return;
+          const reason = window.prompt("Reason for this configuration change (at least 5 characters):"); if (reason === null) return;
+          if (title.trim().length < 2 || description.trim().length < 1 || reason.trim().length < 5) { notice("Title, description and reason are required.", "error"); return; }
+          edit.disabled = true;
+          try {
+            await request("/api/admin/games/" + encodeURIComponent(game.id) + "/config", {method:"PATCH", body:JSON.stringify({title:title.trim(),description:description.trim(),enabled:game.enabled,reason:reason.trim()})});
+            notice("Game configuration updated and audited.", "ok"); await Promise.all([loadGames(),loadAudit()]);
+          } catch (e) { notice(e.message, "error"); }
+          finally { edit.disabled = false; }
+        });
+        const toggle = document.createElement("button"); toggle.className = game.enabled ? "danger" : "secondary"; toggle.textContent = game.enabled ? "Disable" : "Enable";
+        toggle.addEventListener("click", async () => {
+          const reason = window.prompt("Reason for " + (game.enabled ? "disabling" : "enabling") + " " + game.title + ":");
+          if (reason === null) return;
+          if (reason.trim().length < 5) { notice("Please provide a reason of at least 5 characters.", "error"); return; }
+          toggle.disabled = true;
+          try {
+            await request("/api/admin/games/" + encodeURIComponent(game.id) + "/config", {method:"PATCH", body:JSON.stringify({title:game.title,description:game.description,enabled:!game.enabled,reason:reason.trim()})});
+            notice("Game availability updated and audited.", "ok"); await Promise.all([loadGames(),loadAudit()]);
+          } catch (e) { notice(e.message, "error"); }
+          finally { toggle.disabled = false; }
+        });
+        actionCell.append(edit, document.createTextNode(" "), toggle); tr.append(actionCell); tbody.append(tr);
+      }
+    } catch (e) { notice(e.message, "error"); }
+  };
+
   const loadAudit = async () => {
     const tbody = $("events"); tbody.replaceChildren();
     try {
@@ -100,6 +144,7 @@
   });
   $("searchForm").addEventListener("submit", async (event) => { event.preventDefault(); await loadUsers(); });
   $("refreshAudit").addEventListener("click", loadAudit);
+  $("refreshGames").addEventListener("click", loadGames);
   $("logout").addEventListener("click", async () => {
     try { if (token) await request("/api/auth/logout", {method:"POST"}); }
     catch (_) { /* Clear local session even if the API is unreachable. */ }
