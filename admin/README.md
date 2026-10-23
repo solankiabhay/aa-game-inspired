@@ -1,22 +1,24 @@
 # Admin Dashboard
 
-The admin UI is planned; no working dashboard is implemented yet.
+## Working dashboard
+A lightweight API-connected admin console is implemented at `admin/index.html` and served by Spring Boot at `http://localhost:8080/admin/index.html`. The same-origin copy is `backend/src/main/resources/static/admin/index.html`.
 
-## Recommended first cut
-Use a pinned TypeScript web stack (for example React + Vite) after agreeing on the framework. Implement:
-- Sign-in/session handling
-- Overview cards for users, enabled demos and recent audit events
-- User search and account status controls
-- Demo game configuration editor with schema validation
-- Audit event table with pagination and filters
-- Loading, empty, error and permission-denied states
+Features:
+- Administrator sign-in using the existing backend session endpoint.
+- Search users by email.
+- Suspend/reactivate user accounts with a required reason.
+- View recent audit events.
+- In-memory-only browser token; sign out calls session revocation.
+- Permission enforcement occurs in the backend, not just in the UI.
 
-## Security requirements
-- Hiding a route is not authorization; API must enforce admin roles.
-- Do not store secrets in frontend environment variables.
-- Require reason/confirmation for administrative changes.
-- Display audit history and actor identity for each sensitive change.
-- Never include real-money payment, deposit or withdrawal tools in this prototype.
+## First administrator
+There is no public admin-promotion endpoint by design. Follow [the controlled bootstrap runbook](../docs/ADMIN_BOOTSTRAP.md) to provision the first ADMIN role directly in the database.
 
-## Status
-Documentation only. Choose framework, add package manifest, implement components, tests and build pipeline before claiming it is functional.
+## Remaining production work
+- Replace basic HTML UI with a versioned, tested component framework if desired.
+- Add pagination, stronger confirmation dialogs, filters and accessibility testing.
+- Add admin game configuration endpoints and corresponding UI.
+- Add stronger admin MFA/SSO, approval controls and operational audit for role changes.
+- Perform security review before any public deployment.
+
+Never include real-money payment, deposit or withdrawal tools in this prototype.
