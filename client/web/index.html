@@ -87,9 +87,11 @@
  $("registerForm").addEventListener("submit", async event => {
    event.preventDefault();
    try {
-     await api("/api/auth/register",{method:"POST",body:JSON.stringify({email:$("registerEmail").value.trim(),password:$("registerPassword").value})});
+     const registration = await api("/api/auth/register",{method:"POST",body:JSON.stringify({email:$("registerEmail").value.trim(),password:$("registerPassword").value})});
+     $("registerPassword").value = "";
+     if (registration.status === "VERIFICATION_REQUIRED") { notice("Account created. Check your email and open the verification link before signing in. Demo credits have no cash value.", "ok"); return; }
      const data = await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("registerEmail").value.trim(),password:$("registerPassword").value})});
-     token = data.accessToken; await enter(); $("registerPassword").value = ""; notice("Account created. 1,000 demo credits added. These have no cash value.", "ok");
+     token = data.accessToken; await enter(); notice("Account created. 1,000 demo credits added. These have no cash value.", "ok");
    } catch (error) { token = null; notice(error.message,"error"); }
  });
  $("startSession").addEventListener("click", async () => {
