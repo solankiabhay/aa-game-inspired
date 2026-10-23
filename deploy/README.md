@@ -10,4 +10,4 @@ Before starting:
 5. Verify TLS, `https://YOUR_DOMAIN/api/health`, authentication, admin authorization, and game-session behavior.
 6. Test backup and restore on staging before production traffic.
 
-This is a deployment template, not a deployed service. It does not configure DNS, cloud firewall, host patching, external secret manager, monitoring/alerting, SMTP, or a tested disaster-recovery SLA. Validate TLS and database TLS settings against your managed/self-hosted MySQL certificate setup before using this stack. Keep backups off-host and encrypt them at rest.
+This is a deployment template, not a deployed service. It does not configure DNS, cloud firewall, host patching, external secret manager, monitoring/alerting, or a tested disaster-recovery SLA. The SMTP values must belong to a real provider; verify email delivery and link routing in staging. Validate TLS and database TLS settings against your managed/self-hosted MySQL certificate setup before using this stack. Keep backups off-host and encrypt them at rest.
