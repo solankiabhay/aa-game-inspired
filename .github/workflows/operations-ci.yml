@@ -40,6 +40,11 @@ jobs:
           MYSQL_PASSWORD: ci_only_password
           MYSQL_ROOT_PASSWORD: ci_only_root_password
           REDIS_PASSWORD: ci_only_redis_password
+          MAIL_FROM: no-reply@example.com
+          SMTP_HOST: smtp.example.com
+          SMTP_PORT: "587"
+          SMTP_USERNAME: ci_user
+          SMTP_PASSWORD: ci_only_smtp_password
         run: docker compose -f docker-compose.prod.yml config --quiet
       - name: Validate Caddy configuration syntax
         run: docker run --rm -e APP_DOMAIN=example.com -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
