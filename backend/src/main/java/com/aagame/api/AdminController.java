@@ -92,6 +92,45 @@ public class AdminController {
         return Map.of("events", events, "limit", 100);
     }
 
+
+    @GetMapping("/games")
+    public Map<String, Object> games(@RequestHeader(name = "Authorization", required = false) String authorization) {
+        requireAdmin(authorization);
+        var games = jdbc.query("SELECT game_id,title,category,description,enabled,updated_at FROM game_configs ORDER BY game_id",
+            (rs, row) -> Map.<String, Object>of(
+                "id", rs.getString("game_id"),
+                "title", rs.getString("title"),
+                "category", rs.getString("category"),
+                "description", rs.getString("description"),
+                "enabled", rs.getBoolean("enabled"),
+                "updatedAt", rs.getTimestamp("updated_at").toInstant().toString()));
+        return Map.of("games", games);
+    }
+
+    @PatchMapping("/games/{gameId}/config")
+    @Transactional
+    public Map<String, Object> updateGameConfig(
+            @RequestHeader(name = "Authorization", required = false) String authorization,
+            @PathVariable String gameId,
+            @Valid @RequestBody GameConfigRequest request) {
+        long actorId = requireAdmin(authorization);
+        var current = jdbc.query("SELECT title,description,enabled FROM game_configs WHERE game_id=?",
+            (rs, row) -> Map.<String, Object>of(
+                "title", rs.getString("title"),
+                "description", rs.getString("description"),
+                "enabled", rs.getBoolean("enabled")), gameId);
+        if (current.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Game configuration not found.");
+        Map<String, Object> before = current.get(0);
+        String beforeValue = before.get("title") + "|" + before.get("description") + "|" + before.get("enabled");
+        String afterValue = request.title().trim() + "|" + request.description().trim() + "|" + request.enabled();
+        jdbc.update("UPDATE game_configs SET title=?,description=?,enabled=?,updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE game_id=?",
+            request.title().trim(), request.description().trim(), request.enabled(), actorId, gameId);
+        jdbc.update("INSERT INTO audit_events(actor_user_id,action,target_type,target_id,reason,before_value,after_value) VALUES (?,?,?,?,?,?,?)",
+            actorId, "GAME_CONFIG_CHANGED", "GAME", gameId, request.reason().trim(), beforeValue, afterValue);
+        return Map.of("id", gameId, "title", request.title().trim(),
+            "description", request.description().trim(), "enabled", request.enabled(), "changed", true);
+    }
+
     private long requireAdmin(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ") || authorization.substring(7).trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "A Bearer session token is required.");
@@ -113,6 +152,13 @@ public class AdminController {
 
     public record StatusRequest(
         @NotBlank @Pattern(regexp = "ACTIVE|SUSPENDED") String status,
+        @NotBlank @Size(min = 5, max = 500) String reason
+    ) {}
+
+    public record GameConfigRequest(
+        @NotBlank @Size(min = 2, max = 120) String title,
+        @NotBlank @Size(max = 500) String description,
+        boolean enabled,
         @NotBlank @Size(min = 5, max = 500) String reason
     ) {}
 }
