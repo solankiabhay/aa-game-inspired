@@ -31,6 +31,7 @@ class AdminControllerTest {
     @BeforeEach
     void schema() {
         jdbc.execute("DROP TABLE IF EXISTS audit_events");
+        jdbc.execute("DROP TABLE IF EXISTS game_configs");
         jdbc.execute("DROP TABLE IF EXISTS game_sessions");
         jdbc.execute("DROP TABLE IF EXISTS demo_credit_ledger");
         jdbc.execute("DROP TABLE IF EXISTS demo_credit_accounts");
