@@ -214,6 +214,7 @@ public class AuthController {
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        jdbc.update("UPDATE auth_action_tokens SET used_at=CURRENT_TIMESTAMP WHERE user_id=? AND purpose=? AND used_at IS NULL", userId, purpose);
         jdbc.update("INSERT INTO auth_action_tokens(token_hash,user_id,purpose,expires_at) VALUES (?,?,?,?)",
             sha256(token), userId, purpose, Timestamp.from(Instant.now().plus(lifetime)));
         SimpleMailMessage message = new SimpleMailMessage();
