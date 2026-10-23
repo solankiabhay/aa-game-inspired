@@ -31,7 +31,6 @@ Account credentials, session tokens, email addresses, virtual-credit integrity, 
 
 Security controls are design requirements until code and tests prove they exist.
 
-
 ## Implemented in the current MVP
 - Passwords are hashed with BCrypt (work factor 12); plaintext passwords are not persisted.
 - Registration normalizes email case and relies on a unique database constraint.
@@ -41,11 +40,12 @@ Security controls are design requirements until code and tests prove they exist.
 - Admin APIs check the database role on every request and record user-status changes with a reason.
 - Browser client/admin keep tokens in page memory only and use same-origin API paths when served by Spring Boot.
 - Docker runtime uses a non-root numeric user.
+- Login and registration endpoints have configurable, per-process fixed-window rate limits. Defaults: 10 login attempts per IP per 15 minutes and 5 registration attempts per IP per hour. Throttled requests return HTTP 429 with a `Retry-After` header.
 
 ## Known security gaps — do not expose publicly yet
-- Registration/login rate limiting and abuse monitoring are not implemented.
+- Authentication throttling is per application process and uses the direct remote address. Configure trusted proxy handling carefully and add a shared gateway/Redis limiter before running multiple instances; persistent abuse monitoring and alerting are not implemented.
 - Email verification, password reset, MFA and refresh-token rotation are not implemented.
 - Validation and malformed JSON have standardized error envelopes; unexpected exception coverage and production logging/correlation still need review.
-- No production TLS/reverse proxy, CSP/security-header configuration, dependency/image scanning or external secrets manager has been configured.
+- No production TLS/reverse proxy, CSP/security-header configuration, container image scanning or external secrets manager has been configured.
 - Admin role changes performed manually in the database are not automatically recorded in the app audit table; record them in the operator audit log.
 - No real-MySQL end-to-end deployment, penetration test or load test has been completed.
