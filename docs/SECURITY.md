@@ -41,7 +41,7 @@ Security controls are design requirements until code and tests prove they exist.
 - Browser client/admin keep tokens in page memory only and use same-origin API paths when served by Spring Boot.
 - Docker runtime uses a non-root numeric user.
 - API responses set baseline browser security headers: nosniff, frame denial, referrer policy, permissions policy and same-origin opener policy. Authentication responses are marked `Cache-Control: no-store` and `Pragma: no-cache`.
-- Login and registration endpoints have configurable, per-process fixed-window rate limits. Defaults: 10 login attempts per IP per 15 minutes and 5 registration attempts per IP per hour. Throttled requests return HTTP 429 with a `Retry-After` header.
+- Login and registration endpoints have configurable fixed-window rate limits. Defaults: 10 login attempts per IP per 15 minutes and 5 registration attempts per IP per hour. Local development uses an in-process limiter; the production Compose template enables Redis-backed shared counters across API instances. Throttled requests return HTTP 429 with a `Retry-After` header. If Redis is unavailable while distributed mode is enabled, authentication fails closed with HTTP 503 rather than bypassing the limiter. Redis keys hash the path/IP tuple instead of storing raw IPs.
 
 ## Known security gaps — do not expose publicly yet
 - Authentication throttling is per application process and uses the direct remote address. Configure trusted proxy handling carefully and add a shared gateway/Redis limiter before running multiple instances; persistent abuse monitoring and alerting are not implemented.
