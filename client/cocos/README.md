@@ -14,7 +14,7 @@ This is the native-client source for Cocos Creator 3.8.6. The API boundary, auth
 
 ## Game behavior and trust boundary
 
-- **Skyline Dash**: 15-second tap challenge.
+- **Skyline Crash**: 15-second tap challenge.
 - **Neon Sequence**: memory sequence grows after correct rounds.
 - **Reef Ranger**: tap-to-collect arcade challenge.
 - Session creation/completion and the recorded score are server-controlled. Local taps are presentation-only and do not affect the saved server score or demo-credit balance.
