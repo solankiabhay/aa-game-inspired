@@ -1,6 +1,6 @@
 # Backend API
 
-Java 21 + Spring Boot 3.5 + Maven REST API. MySQL 8.4 is used for local persistence; Flyway migrations are in `src/main/resources/db/migration`.
+Java 21 + Spring Boot 3.5 + Maven REST API. MySQL 8.4 is used for local persistence; Flyway migrations V1–V4 are in `src/main/resources/db/migration` (users/sessions, demo credits/game sessions, admin audit events, game configuration).
 
 ## Run locally
 From repository root:
@@ -17,7 +17,7 @@ From repository root:
 - `POST /api/auth/login`: 256-bit opaque Bearer token, 24-hour expiry; only SHA-256 token hash stored.
 - `GET /api/auth/me`, `POST /api/auth/logout`: profile and session revocation.
 - `GET /api/auth/me/demo-credits`, `GET /api/auth/me/ledger`: virtual balance and latest ledger entries.
-- `POST /api/games/{gameId}/sessions`, `POST /api/games/sessions/{sessionId}/complete`, `GET /api/games/sessions/{sessionId}`: persistent demo session lifecycle. Score is generated on the server.\n- `GET /api/admin/users`, `PATCH /api/admin/users/{userId}/status`, `GET /api/admin/audit-events`: role-protected admin APIs with audit records.
+- `POST /api/games/{gameId}/sessions`, `POST /api/games/sessions/{sessionId}/complete`, `GET /api/games/sessions/{sessionId}`: persistent demo session lifecycle. Score is generated on the server.\n- `GET /api/admin/users`, `PATCH /api/admin/users/{userId}/status`, `GET /api/admin/audit-events`: role-protected admin APIs with audit records.\n- `GET /api/admin/games`, `PATCH /api/admin/games/{gameId}/config`: role-protected game configuration with audit records.
 
 ## Tests and CI
 `mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks and a Flyway migration smoke test. GitHub Actions runs this command for backend changes.
