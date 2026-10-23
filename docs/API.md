@@ -31,14 +31,17 @@ Send the returned token as `Authorization: Bearer <token>`. Never log passwords 
 ### Game sessions
 - POST `/api/games/{gameId}/sessions` — authenticated session start for `skyline-crash`, `neon-reels`, or `reef-ranger`.
 - POST `/api/games/sessions/{sessionId}/complete` — completes an active session; score is generated server-side and cannot be chosen by the client. A completed session cannot be completed again.
-- GET `/api/games/sessions?limit=20` — lists the authenticated user’s latest sessions (limit capped at 100).\n- GET `/api/games/sessions/{sessionId}` — retrieves a session belonging to the authenticated user.
+- GET `/api/games/sessions?limit=20` — lists the authenticated user’s latest sessions (limit capped at 100).
+- GET `/api/games/sessions/{sessionId}` — retrieves a session belonging to the authenticated user.
 
 These are demo simulation endpoints, not production game mechanics. Demo credits are not wagered, transferred, sold or redeemable.
 
 ### Admin
 - GET `/api/admin/users?query=...` — returns at most 100 matching users.
 - PATCH `/api/admin/users/{userId}/status` — sets status to `ACTIVE` or `SUSPENDED`, requires a reason, revokes sessions on suspension, and writes an audit event.
-- GET `/api/admin/audit-events` — latest 100 audit events.\n- GET `/api/admin/games` — list configured games.\n- PATCH `/api/admin/games/{gameId}/config` — update title, description and enabled status; requires a reason and creates an audit event.
+- GET `/api/admin/audit-events` — latest 100 audit events.
+- GET `/api/admin/games` — list configured games.
+- PATCH `/api/admin/games/{gameId}/config` — update title, description and enabled status; requires a reason and creates an audit event.
 
 Admin endpoints require a valid session for a database-provisioned `ADMIN` role. There is deliberately no public endpoint to grant admin privileges. Bootstrap the first administrator manually using the restricted database runbook; never expose a default admin password in source code.
 
