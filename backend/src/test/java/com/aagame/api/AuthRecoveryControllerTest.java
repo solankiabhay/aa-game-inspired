@@ -42,6 +42,7 @@ class AuthRecoveryControllerTest {
 
     @BeforeEach
     void schema() {
+        org.mockito.Mockito.reset(mailSender);
         jdbc.execute("DROP TABLE IF EXISTS auth_action_tokens");
         jdbc.execute("DROP TABLE IF EXISTS demo_credit_ledger");
         jdbc.execute("DROP TABLE IF EXISTS demo_credit_accounts");
