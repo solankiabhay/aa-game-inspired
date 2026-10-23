@@ -131,7 +131,11 @@ public class AdminController {
             "description", request.description().trim(), "enabled", request.enabled(), "changed", true);
     }
 
-    private static String auditValue(String value) {\n        return value.length() <= 500 ? value : value.substring(0, 500);\n    }\n\n    private long requireAdmin(String authorization) {
+    private static String auditValue(String value) {
+        return value.length() <= 500 ? value : value.substring(0, 500);
+    }
+
+    private long requireAdmin(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ") || authorization.substring(7).trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "A Bearer session token is required.");
         }
