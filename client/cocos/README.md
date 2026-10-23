@@ -1,19 +1,31 @@
-# Cocos Creator client scaffold
+# Cocos Creator native client
 
-This directory now includes a Cocos Creator 3.8.6 project manifest, typed API/auth/game services, and basic scene-controller components. It is a **starter project scaffold, not a verified playable native app**: scene files, prefabs, final visual design, editor import, Android/iOS builds and physical-device tests still require the Creator editor/toolchain.
+This is the native-client source for Cocos Creator 3.8.6. The API boundary, authentication, lobby, account summary, session history, logout, and three mini-game controller mechanics are implemented in TypeScript.
 
-## Open and wire in Creator
+## Import and wire the native UI
 
-1. Install Cocos Creator 3.8.6 (or update package.json and test against your selected supported version).
-2. Open this directory as a project in Creator. Let the editor generate local settings/asset metadata as required.
-3. Create a scene with an email EditBox, password EditBox, status Label and buttons. Attach AuthScreen to a node; assign the fields in the Inspector and wire buttons to register/login.
-4. Create a lobby scene with catalogue/status Labels and buttons. Attach LobbyScreen, wire refresh and playSelected, and call refresh when the scene opens.
-5. Configure AuthScreen.apiBaseUrl to your API origin. Use HTTPS outside local development. Configure the hosting/CORS policy if serving a web build from a separate origin.
-6. Build and run through Creator on each intended platform, then test account registration/login, API errors, logout, session expiry and app background/resume.
+1. Install Cocos Creator **3.8.6** and open this directory as a project.
+2. Set the API origin on `AuthScreen.apiBaseUrl`. Use an HTTPS origin outside local development. The client does not persist bearer tokens to disk.
+3. Create an Auth scene/root containing email and password EditBoxes, a status Label, Register and Sign In buttons. Attach `AuthScreen`; assign `emailInput`, `passwordInput`, `statusLabel`, `authRoot`, and `lobbyRoot` in the Inspector. Wire the buttons to `register` and `login`.
+4. Create the lobby root with catalogue, status, profile, balance, score and history Labels plus Play, Finish and Logout buttons. Attach `LobbyScreen`; wire buttons to `refresh`, `playSelected`, `finishRound` and `logout`. Wire game-selection buttons to `selectGame` with one of `skyline-crash`, `neon-reels`, or `reef-ranger`.
+5. For a dedicated game scene/panel, attach `MiniGameController`, choose a `gameId`, and assign its Labels and buttons. Wire Start to `startRound`, Finish to `finishRound`, the Skyline/Reef action button to `action`, and the four Neon Sequence tile buttons to `tile0Action` through `tile3Action`.
+6. Set the intended start scene in Creator's Build panel. Preview and test sign-in, email-verification behavior, all three game types, network failures, session expiry, logout and orientation/resizing.
+7. Build for each intended platform in Creator and run on physical Android/iOS devices before publishing.
 
-## Security and scope
+## Game behavior and trust boundary
 
-- Session tokens stay in memory and must never be logged or placed in URLs.
-- Only non-redeemable demo credits are supported; no deposits, withdrawals, cash-outs or payment integrations.
-- GameService currently starts and completes a simulated backend session. The controller is only a flow scaffold; original gameplay mechanics, animation, prefabs and UX polish are still required.
-- No successful editor import, native build or device test is claimed until those actions are run in Cocos Creator.
+- **Skyline Dash**: 15-second tap challenge.
+- **Neon Sequence**: memory sequence grows after correct rounds.
+- **Reef Ranger**: tap-to-collect arcade challenge.
+- Session creation/completion and the recorded score are server-controlled. Local taps are presentation-only and do not affect the saved server score or demo-credit balance.
+- No payment SDK, deposits, withdrawals, cash-outs or redeemable credits are included.
+
+## Type-check source
+
+From the repository root:
+
+```sh
+npx --yes --package typescript@5.7.3 tsc -p client/cocos/tsconfig.ci.json
+```
+
+CI uses a minimal `cc` declaration shim for static TypeScript checking. That check is not a replacement for opening the project in Creator; the native editor import, rendering, platform builds and device tests must still be performed with the Creator toolchain.
