@@ -52,7 +52,7 @@ class AuthenticationRateLimitFilterTest {
     @Test
     void failsClosedWhenDistributedLimiterIsEnabledButUnavailable() throws Exception {
         AuthenticationRateLimitFilter filter = new AuthenticationRateLimitFilter(
-            10, Duration.ofMinutes(15), 5, Duration.ofHours(1), true, null);
+            10, Duration.ofMinutes(15), 5, Duration.ofHours(1), true, (org.springframework.data.redis.core.StringRedisTemplate) null);
         MockHttpServletResponse response = invoke(filter, "/api/auth/login", "192.0.2.99");
         assertEquals(503, response.getStatus());
         assertEquals("RATE_LIMITER_UNAVAILABLE", new com.fasterxml.jackson.databind.ObjectMapper()
