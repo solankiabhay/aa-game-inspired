@@ -22,7 +22,7 @@ class FlywayMigrationTest {
     void allMigrationsCreateExpectedTables() {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME IN ('APP_USERS','USER_SESSIONS','DEMO_CREDIT_ACCOUNTS','DEMO_CREDIT_LEDGER','GAME_SESSIONS','AUDIT_EVENTS')", Integer.class))
             .isEqualTo(6);
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM \"flyway_schema_history\" WHERE success = TRUE", Integer.class))
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM \"flyway_schema_history\" WHERE "success" = TRUE", Integer.class))
             .isEqualTo(3);
     }
 }
