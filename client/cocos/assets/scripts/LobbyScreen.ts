@@ -128,15 +128,19 @@ export class LobbyScreen extends Component {
         if (this.busy) return;
         this.busy = true;
         this.setButtonEnabled(this.logoutButton, false);
+        let serverConfirmed = false;
         try {
             await AuthService.logout();
+            serverConfirmed = true;
+        } catch {
+            // AuthService clears the in-memory token even if the server is unreachable.
+        } finally {
             this.activeSession = null;
             if (this.lobbyRoot) this.lobbyRoot.active = false;
             if (this.authRoot) this.authRoot.active = true;
-            this.setStatus("Signed out securely.");
-        } catch (error) {
-            this.setStatus(this.message(error));
-        } finally {
+            this.setStatus(serverConfirmed
+                ? "Signed out. The server session was revoked."
+                : "Signed out on this device. Server revocation could not be confirmed; reconnect and sign in again.");
             this.busy = false;
             this.setButtonEnabled(this.logoutButton, true);
         }
