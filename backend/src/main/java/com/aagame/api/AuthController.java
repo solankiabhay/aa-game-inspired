@@ -48,8 +48,7 @@ public class AuthController {
         String email = normalizeEmail(request.email());
         String passwordHash = passwordEncoder.encode(request.password());
         try {
-            jdbc.update("INSERT INTO app_users(email,password_hash,role,status) VALUES (?,?, 'USER','ACTIVE')",
-                email, passwordHash);
+            jdbc.update("INSERT INTO app_users(email,password_hash,role,status) VALUES (?,?, 'USER','ACTIVE')", email, passwordHash);
         } catch (DuplicateKeyException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists.");
         }
@@ -60,7 +59,7 @@ public class AuthController {
     public SessionResponse login(@Valid @RequestBody LoginRequest request) {
         String email = normalizeEmail(request.email());
         var users = jdbc.query("SELECT id,password_hash,status FROM app_users WHERE email = ?",
-            (rs, row) -> new UserRow(rs.getLong("id"), rs.getString("password_hash"), rs.getString("status")), email);
+            (rs, row) -> new UserRow(rs.getLong("id"), null, null, rs.getString("status"), rs.getString("password_hash")), email);
         if (users.isEmpty() || !"ACTIVE".equals(users.get(0).status())
             || !passwordEncoder.matches(request.password(), users.isEmpty() ? passwordEncoder.encode("invalid-placeholder") : users.get(0).passwordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password.");
@@ -70,8 +69,7 @@ public class AuthController {
         RANDOM.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         Instant expires = Instant.now().plus(SESSION_HOURS, ChronoUnit.HOURS);
-        jdbc.update("INSERT INTO user_sessions(token_hash,user_id,expires_at) VALUES (?,?,?)",
-            sha256(token), user.id(), Timestamp.from(expires));
+        jdbc.update("INSERT INTO user_sessions(token_hash,user_id,expires_at) VALUES (?,?,?)", sha256(token), user.id(), Timestamp.from(expires));
         return new SessionResponse(token, "Bearer", expires.toString());
     }
 
@@ -83,8 +81,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader(name = "Authorization", required = false) String authorization) {
-        String token = bearerToken(authorization);
-        jdbc.update("DELETE FROM user_sessions WHERE token_hash = ?", sha256(token));
+        jdbc.update("DELETE FROM user_sessions WHERE token_hash = ?", sha256(bearerToken(authorization)));
         return ResponseEntity.noContent().build();
     }
 
@@ -95,7 +92,7 @@ public class AuthController {
             FROM user_sessions s JOIN app_users u ON u.id=s.user_id
             WHERE s.token_hash=? AND s.expires_at > CURRENT_TIMESTAMP
             """, (rs, row) -> new UserRow(rs.getLong("id"), rs.getString("email"),
-                rs.getString("role"), rs.getString("status")), sha256(token));
+                rs.getString("role"), rs.getString("status"), null), sha256(token));
         if (users.isEmpty() || !"ACTIVE".equals(users.get(0).status())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Session is invalid or expired.");
         }
@@ -103,7 +100,7 @@ public class AuthController {
     }
 
     private static String bearerToken(String authorization) {
-        if (authorization == null || !authorization.startsWith("Bearer ") || authorization.length() <= 7) {
+        if (authorization == null || !authorization.startsWith("Bearer ") || authorization.substring(7).trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "A Bearer session token is required.");
         }
         return authorization.substring(7).trim();
@@ -126,9 +123,7 @@ public class AuthController {
     public record LoginRequest(@NotBlank @Email @Size(max = 254) String email,
                                @NotBlank @Size(max = 72) String password) {}
     public record SessionResponse(String accessToken, String tokenType, String expiresAt) {}
-    private record UserRow(long id, String email, String role, String status, String passwordHash) {
-        UserRow(long id, String passwordHash, String status) { this(id, null, null, status, passwordHash); }
-    }
+    private record UserRow(long id, String email, String role, String status, String passwordHash) {}
 }
 
 @RestControllerAdvice
@@ -137,9 +132,6 @@ class ApiExceptionHandler {
     ResponseEntity<Map<String, String>> handleStatus(ResponseStatusException ex, HttpServletRequest request) {
         String message = ex.getReason() == null ? "Request could not be completed." : ex.getReason();
         return ResponseEntity.status(ex.getStatusCode()).body(Map.of(
-            "code", ex.getStatusCode().toString(),
-            "message", message,
-            "path", request.getRequestURI()
-        ));
+            "code", ex.getStatusCode().toString(), "message", message, "path", request.getRequestURI()));
     }
 }
