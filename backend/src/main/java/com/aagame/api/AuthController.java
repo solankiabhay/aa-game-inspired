@@ -3,6 +3,8 @@ package com.aagame.api;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -16,10 +18,13 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +40,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthController {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int SESSION_HOURS = 24;
+    private static final long STARTING_DEMO_CREDITS = 1000;
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
 
@@ -43,16 +49,30 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         String email = normalizeEmail(request.email());
         String passwordHash = passwordEncoder.encode(request.password());
+        KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-            jdbc.update("INSERT INTO app_users(email,password_hash,role,status) VALUES (?,?, 'USER','ACTIVE')", email, passwordHash);
+            jdbc.update(connection -> {
+                PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO app_users(email,password_hash,role,status) VALUES (?,?, 'USER','ACTIVE')",
+                    Statement.RETURN_GENERATED_KEYS);
+                ps.setString(1, email);
+                ps.setString(2, passwordHash);
+                return ps;
+            }, keyHolder);
         } catch (DuplicateKeyException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists.");
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("status", "REGISTERED", "email", email));
+        long userId = keyHolder.getKey().longValue();
+        jdbc.update("INSERT INTO demo_credit_accounts(user_id,balance) VALUES (?,?)", userId, STARTING_DEMO_CREDITS);
+        jdbc.update("INSERT INTO demo_credit_ledger(user_id,delta,balance_after,reason,reference_id) VALUES (?,?,?,'WELCOME_CREDITS',?)",
+            userId, STARTING_DEMO_CREDITS, STARTING_DEMO_CREDITS, "registration:" + userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+            "status", "REGISTERED", "email", email, "startingDemoCredits", STARTING_DEMO_CREDITS));
     }
 
     @PostMapping("/login")
@@ -69,7 +89,8 @@ public class AuthController {
         RANDOM.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         Instant expires = Instant.now().plus(SESSION_HOURS, ChronoUnit.HOURS);
-        jdbc.update("INSERT INTO user_sessions(token_hash,user_id,expires_at) VALUES (?,?,?)", sha256(token), user.id(), Timestamp.from(expires));
+        jdbc.update("INSERT INTO user_sessions(token_hash,user_id,expires_at) VALUES (?,?,?)",
+            sha256(token), user.id(), Timestamp.from(expires));
         return new SessionResponse(token, "Bearer", expires.toString());
     }
 
@@ -77,6 +98,28 @@ public class AuthController {
     public Map<String, Object> me(@RequestHeader(name = "Authorization", required = false) String authorization) {
         UserRow user = requireUser(authorization);
         return Map.of("id", user.id(), "email", user.email(), "role", user.role());
+    }
+
+    @GetMapping("/me/demo-credits")
+    public Map<String, Object> demoCredits(@RequestHeader(name = "Authorization", required = false) String authorization) {
+        UserRow user = requireUser(authorization);
+        var balances = jdbc.query("SELECT balance FROM demo_credit_accounts WHERE user_id=?",
+            (rs, row) -> rs.getLong("balance"), user.id());
+        if (balances.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Demo-credit account not found.");
+        return Map.of("balance", balances.get(0), "currency", "DEMO_CREDITS", "redeemable", false);
+    }
+
+    @GetMapping("/me/ledger")
+    public Map<String, Object> demoLedger(@RequestHeader(name = "Authorization", required = false) String authorization) {
+        UserRow user = requireUser(authorization);
+        var entries = jdbc.query("SELECT delta,balance_after,reason,reference_id,created_at FROM demo_credit_ledger WHERE user_id=? ORDER BY id DESC LIMIT 100",
+            (rs, row) -> Map.<String, Object>of(
+                "delta", rs.getLong("delta"),
+                "balanceAfter", rs.getLong("balance_after"),
+                "reason", rs.getString("reason"),
+                "referenceId", rs.getString("reference_id") == null ? "" : rs.getString("reference_id"),
+                "createdAt", rs.getTimestamp("created_at").toInstant().toString()), user.id());
+        return Map.of("entries", entries, "limit", 100);
     }
 
     @PostMapping("/logout")
