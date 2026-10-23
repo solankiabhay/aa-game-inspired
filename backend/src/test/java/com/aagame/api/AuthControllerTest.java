@@ -28,18 +28,23 @@ class AuthControllerTest {
 
     @BeforeEach
     void schema() {
+        jdbc.execute("DROP TABLE IF EXISTS demo_credit_ledger");
+        jdbc.execute("DROP TABLE IF EXISTS demo_credit_accounts");
         jdbc.execute("DROP TABLE IF EXISTS user_sessions");
         jdbc.execute("DROP TABLE IF EXISTS app_users");
         jdbc.execute("CREATE TABLE app_users (id BIGINT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(254) NOT NULL UNIQUE, password_hash VARCHAR(100) NOT NULL, role VARCHAR(20) NOT NULL DEFAULT 'USER', status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
         jdbc.execute("CREATE TABLE user_sessions (token_hash CHAR(64) PRIMARY KEY, user_id BIGINT NOT NULL, expires_at TIMESTAMP NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE)");
+        jdbc.execute("CREATE TABLE demo_credit_accounts (user_id BIGINT PRIMARY KEY, balance BIGINT NOT NULL DEFAULT 1000, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE)");
+        jdbc.execute("CREATE TABLE demo_credit_ledger (id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id BIGINT NOT NULL, delta BIGINT NOT NULL, balance_after BIGINT NOT NULL, reason VARCHAR(40) NOT NULL, reference_id VARCHAR(64), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE)");
     }
 
     @Test
-    void registrationLoginProfileAndLogoutFlow() throws Exception {
+    void registrationLoginProfileCreditsAndLogoutFlow() throws Exception {
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"Player@Example.com\",\"password\":\"StrongPassword123!\"}"))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.email").value("player@example.com"));
+            .andExpect(jsonPath("$.email").value("player@example.com"))
+            .andExpect(jsonPath("$.startingDemoCredits").value(1000));
 
         String loginBody = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"player@example.com\",\"password\":\"StrongPassword123!\"}"))
@@ -53,9 +58,17 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.email").value("player@example.com"))
             .andExpect(jsonPath("$.role").value("USER"));
 
+        mvc.perform(get("/api/auth/me/demo-credits").header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.balance").value(1000))
+            .andExpect(jsonPath("$.redeemable").value(false));
+
+        mvc.perform(get("/api/auth/me/ledger").header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.entries[0].reason").value("WELCOME_CREDITS"));
+
         mvc.perform(post("/api/auth/logout").header("Authorization", "Bearer " + token))
             .andExpect(status().isNoContent());
-
         mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
             .andExpect(status().isUnauthorized());
     }
@@ -65,7 +78,6 @@ class AuthControllerTest {
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"bad@example.com\",\"password\":\"weak\"}"))
             .andExpect(status().isBadRequest());
-
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"missing@example.com\",\"password\":\"SomeLongPassword123!\"}"))
             .andExpect(status().isUnauthorized());
