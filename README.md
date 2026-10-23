@@ -6,9 +6,9 @@
 
 This repository is the single source of truth for what we are building and how to build it. Start here, then follow the documents in `docs/`.
 
-- **Current stage:** early scaffold and implementation blueprint.
-- **Implemented so far:** basic Spring Boot application entry point, `GET /api/health`, environment-based application configuration, local MySQL Docker Compose, initial documentation.
-- **Not implemented yet:** production authentication, game engines/scenes, admin UI, persistence entities/migrations, authorization, deployment, and end-to-end tests.
+- **Current stage:** backend MVP foundation with tested registration/login, opaque sessions, demo-credit ledger initialization, and persistent demo game-session APIs; client/admin/deployment are still incomplete.
+- **Implemented so far:** `GET /api/health`, public game catalogue, Flyway user/session/credit/game tables, BCrypt registration, opaque 24-hour Bearer sessions with hashed token storage, logout/profile endpoints, 1,000 non-redeemable welcome credits with ledger entry, server-generated demo-session scores, H2 integration tests, GitHub Actions CI.
+- **Not implemented yet:** rate limiting, email verification/password reset, hardened unified error responses, admin UI/role management, Cocos Creator game client, actual production game mechanics, deployment and security/load testing.
 - **Do not mistake a plan or placeholder for a finished feature.** Update this status whenever code is actually implemented and tested.
 
 ## 2. Product vision
@@ -75,20 +75,20 @@ The client renders screens and sends commands; the backend validates identity, p
 ### Phase 0 — Foundation
 - [x] Repository and initial Spring Boot scaffold.
 - [x] Health endpoint and local MySQL compose file.
-- [ ] Confirm/pin toolchain versions and add Flyway.
-- [ ] Add repeatable local setup instructions and CI build.
+- [x] Confirm Java 21/Spring Boot/Maven and add Flyway migrations.
+- [x] Add local setup instructions and GitHub Actions backend CI.
 
 ### Phase 1 — Authentication and profiles
-- [ ] Registration with email validation and BCrypt/Argon2 password hashing.
-- [ ] Login, short-lived access token and safe refresh/session strategy.
-- [ ] Server-side role checks, logout/revocation, rate limits and generic auth errors.
-- [ ] Profile and account status endpoints; unit and integration tests.
+- [x] Registration with email validation and BCrypt password hashing.
+- [x] Login with opaque random 24-hour Bearer session token; store only SHA-256 token hash.
+- [x] Logout/revocation and profile/session validation.\n- [ ] Rate limits, password reset/verification and full role-based admin authorization.
+- [x] Basic profile endpoint and auth integration tests.
 
 ### Phase 2 — Demo economy and game APIs
-- [ ] Virtual-credit account and append-only ledger.
-- [ ] Idempotent credit/debit operations inside database transactions.
-- [ ] Server-authoritative game sessions and result validation.
-- [ ] Per-game rules documented, deterministic test cases, abuse controls.
+- [x] Virtual-credit account and initial welcome-credit ledger entry.
+- [ ] General credit/debit operations and idempotency (credits are not currently wagered or spent).
+- [x] Persistent demo sessions and server-generated completion scores.\n- [ ] Full game-specific state machines and result validation.
+- [ ] Per-game rules, abuse controls and expanded deterministic game tests.
 
 ### Phase 3 — Cocos Creator client
 - [ ] Navigation shell, login/register forms, loading/error states.
