@@ -27,8 +27,8 @@ From repository root:
 
 ## Authentication rate limits
 A built-in fixed-window filter limits public authentication POST endpoints by the direct client IP:
-- Login: 10 requests per 15 minutes.
-- Registration: 5 requests per hour.
+- Login, email verification and password-reset confirmation: 10 requests per 15 minutes.
+- Registration and password-reset requests: 5 requests per hour.
 - Excess attempts receive HTTP 429, a `Retry-After` header, and a `RATE_LIMITED` response code.
 - Baseline browser response headers include `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` and `Cross-Origin-Opener-Policy`.
 
@@ -41,7 +41,7 @@ Defaults can be overridden with Spring properties/environment variables:
 Local development defaults to the in-process limiter. Production Compose enables a Redis-backed atomic counter with TTL shared across API instances; Redis failures fail closed with HTTP 503. Use a strong REDIS_PASSWORD. Only trust forwarded client-IP headers when the reverse proxy is explicitly configured to overwrite them.
 
 ## Tests and CI
-`mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks, rate-limit and browser-security-header unit tests, and a Flyway migration smoke test. GitHub Actions runs backend verification, CodeQL, and secret/dependency/misconfiguration scans for backend changes.
+`mvn --batch-mode verify` runs catalogue MVC, H2-backed auth/game-session/admin integration tests, static-page checks, rate-limit and browser-security-header unit tests, email verification/password-reset integration tests, and a Flyway migration smoke test. GitHub Actions runs backend verification, CodeQL, and secret/dependency/misconfiguration scans for backend changes.
 
 ## Known limitations — not production ready
 - MFA, refresh-token rotation and session listing are not implemented. SMTP delivery, verification/reset links and token-expiry behavior still need provider-specific staging validation.
