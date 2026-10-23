@@ -39,7 +39,7 @@
    $("auth").classList.add("hidden"); $("app").classList.remove("hidden");
    const me = await api("/api/auth/me");
    $("account").textContent = me.email;
-   await Promise.all([loadGames(), loadBalance(), loadLedger()]);
+   await Promise.all([loadGames(), loadBalance(), loadLedger(), loadHistory()]);
  };
  const loadBalance = async () => { const data = await api("/api/auth/me/demo-credits"); $("balance").textContent = data.balance.toLocaleString(); };
  const loadLedger = async () => {
@@ -72,10 +72,12 @@
      card.append(icon,tag,title,desc,button); container.append(card);
    }
  };
- const refreshHistory = () => {
+ const loadHistory = async () => {
+   const data = await api("/api/games/sessions?limit=20");
    const list = $("history"); list.replaceChildren();
-   if (!rounds.length) { const li = document.createElement("li"); li.textContent = "No rounds yet in this page session."; list.append(li); return; }
-   rounds.slice(0,8).forEach(round => { const li = document.createElement("li"); li.textContent = round.title + " · score " + round.score + " · " + new Date(round.at).toLocaleTimeString(); list.append(li); });
+   if (!data.sessions.length) { const li = document.createElement("li"); li.textContent = "No rounds yet."; list.append(li); return; }
+   const titles = {"skyline-crash":"Skyline Crash","neon-reels":"Neon Reels","reef-ranger":"Reef Ranger"};
+   data.sessions.forEach(round => { const li = document.createElement("li"); li.textContent = (titles[round.gameId] || round.gameId) + " · " + round.status.toLowerCase() + " · score " + round.score + " · " + new Date(round.createdAt).toLocaleString(); list.append(li); });
  };
  $("loginForm").addEventListener("submit", async event => {
    event.preventDefault();
@@ -104,7 +106,7 @@
    try {
      const data = await api("/api/games/sessions/" + encodeURIComponent(activeSession) + "/complete",{method:"POST"});
      $("sessionStatus").textContent = "COMPLETED"; $("score").textContent = String(data.score); $("sessionMessage").textContent = "Round saved. This score is a server-side demo simulation."; $("startSession").disabled = false;
-     rounds.unshift({title:activeGame.title,score:data.score,at:Date.now()}); refreshHistory(); await loadBalance(); notice("Demo round completed successfully.", "ok");
+     rounds.unshift({title:activeGame.title,score:data.score,at:Date.now()}); await Promise.all([loadHistory(), loadBalance()]); notice("Demo round completed successfully.", "ok");
    } catch (error) { notice(error.message,"error"); $("completeSession").disabled = false; }
  });
  $("refresh").addEventListener("click", async () => { try { await Promise.all([loadBalance(),loadLedger()]); notice("Wallet and ledger refreshed.","ok"); } catch(e) { notice(e.message,"error"); } });
