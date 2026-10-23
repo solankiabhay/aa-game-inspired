@@ -75,7 +75,7 @@ export class MiniGameController extends Component {
         }
     }
 
-    /** Bind to the main gameplay button for Skyline Dash and Reef Ranger. */
+    /** Bind to the main gameplay button for Skyline Crash and Reef Ranger. */
     action(): void {
         if (!this.session || this.busy || this.inputLocked || this.gameId === "neon-reels") return;
         this.activity = Math.min(9999, this.activity + 1);
@@ -193,7 +193,7 @@ export class MiniGameController extends Component {
     }
 
     private instructions(): string {
-        if (this.gameId === "skyline-crash") return "Skyline Dash · Tap fast for 15 seconds.";
+        if (this.gameId === "skyline-crash") return "Skyline Crash · Tap fast for 15 seconds.";
         if (this.gameId === "neon-reels") return "Neon Sequence · Memorize and repeat patterns.";
         return "Reef Ranger · Tap to collect friendly fish.";
     }
