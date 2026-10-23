@@ -22,10 +22,9 @@ class AuthenticationRateLimitFilterTest {
 
         MockHttpServletResponse limited = invoke(filter, "/api/auth/login", "192.0.2.10");
         assertEquals(429, limited.getStatus());
-        assertEquals("RATE_LIMITED", com.fasterxml.jackson.databind.JsonNode.class
-            .cast(new com.fasterxml.jackson.databind.ObjectMapper().readTree(limited.getContentAsString()))
-            .get("code").asText());
-        assertEquals(true, limited.getHeader("Retry-After") != null);
+        assertEquals("RATE_LIMITED", new com.fasterxml.jackson.databind.ObjectMapper()
+            .readTree(limited.getContentAsString()).get("code").asText());
+        org.junit.jupiter.api.Assertions.assertNotNull(limited.getHeader("Retry-After"));
     }
 
     @Test
