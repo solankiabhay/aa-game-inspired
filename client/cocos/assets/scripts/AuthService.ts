@@ -50,7 +50,11 @@ export class AuthService {
         return ApiClient.get<DemoCreditBalance>("/api/auth/me/demo-credits");
     }
 
-    static clearSession(): void {\n        ApiClient.setToken(null);\n    }\n\n    static async logout(): Promise<void> {
+    static clearSession(): void {
+        ApiClient.setToken(null);
+    }
+
+    static async logout(): Promise<void> {
         try {
             await ApiClient.post<void>("/api/auth/logout");
         } finally {
