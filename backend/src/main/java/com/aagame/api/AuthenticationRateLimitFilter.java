@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.HttpStatus;
@@ -46,7 +47,12 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
             @Value("${app.security.rate-limit.register.max-requests:5}") int registerMaxRequests,
             @Value("${app.security.rate-limit.register.window:1h}") Duration registerWindow,
             @Value("${app.security.rate-limit.redis-enabled:false}") boolean redisEnabled,
-            StringRedisTemplate redis) {
+            ObjectProvider<StringRedisTemplate> redisProvider) {
+        this(loginMaxRequests, loginWindow, registerMaxRequests, registerWindow, redisEnabled, redisProvider.getIfAvailable());
+    }
+
+    AuthenticationRateLimitFilter(int loginMaxRequests, Duration loginWindow, int registerMaxRequests,
+            Duration registerWindow, boolean redisEnabled, StringRedisTemplate redis) {
         this.loginMaxRequests = Math.max(1, loginMaxRequests);
         this.loginWindow = positive(loginWindow, Duration.ofMinutes(15));
         this.registerMaxRequests = Math.max(1, registerMaxRequests);
