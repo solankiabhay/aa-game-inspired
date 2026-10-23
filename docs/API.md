@@ -44,9 +44,9 @@ Admin endpoints require a valid session for a database-provisioned `ADMIN` role.
 
 ## Planned hardening
 - Rate limiting and abuse controls for registration/login.
-- Email verification, password reset, session listing/revocation, refresh tokens, and stronger account recovery.
-- Unified production-grade validation errors, request IDs and central exception coverage.
-- Admin game configuration endpoints and dashboard UI.
+- Email verification, password reset, refresh tokens, and stronger account recovery.
+- Standardized validation/malformed-JSON error envelopes are implemented; complete coverage for all unexpected exceptions remains.
+- Admin game configuration endpoints and richer dashboard features.
 
 ## Database
 Flyway migrations are under `backend/src/main/resources/db/migration`: V1 users/sessions, V2 demo-credit ledger/game sessions, V3 admin audit events.
