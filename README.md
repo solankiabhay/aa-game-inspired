@@ -53,7 +53,7 @@ The client renders screens and sends commands; the backend validates identity, p
 - **Client:** Cocos Creator (TypeScript; select and pin a supported Creator version before implementation).
 - **Backend:** Java 21 + Spring Boot 3.x, Maven, Bean Validation.
 - **Database:** MySQL 8.x with versioned schema migrations (Flyway recommended).
-- **Admin:** TypeScript web application; choose React/Vite or another framework before building screens.
+- **Admin:** lightweight same-origin HTML/JavaScript console is implemented; a larger framework migration is optional.
 - **Local infrastructure:** Docker Compose.
 - **CI:** GitHub Actions for backend tests/build and client/admin checks when their manifests exist.
 - **API contract:** REST JSON, documented in `docs/API.md`; consider OpenAPI generation once controllers stabilize.
@@ -63,12 +63,12 @@ The client renders screens and sends commands; the backend validates identity, p
 | Path | Responsibility |
 |---|---|
 | `backend/` | Spring Boot API, domain services, persistence, validation and tests |
-| `client/` | Cocos Creator scenes, UI, API client and demo mini-games |
-| `admin/` | Admin web dashboard (planned) |
+| `client/` | API-connected browser MVP; native Cocos Creator project pending |
+| `admin/` | API-connected admin console source and deployment notes |
 | `database/` | Schema and migration design |
 | `docs/` | Product spec, architecture, API, security, test plan and roadmap |
 | `.github/workflows/` | CI automation |
-| `docker-compose.yml` | Local MySQL for development |
+| `docker-compose.yml` | Local MySQL + API application stack |
 
 ## 6. Build sequence
 
@@ -103,7 +103,7 @@ The client renders screens and sends commands; the backend validates identity, p
 - [ ] Operational monitoring, backup/restore rehearsal and incident checklist.
 
 ### Phase 5 — Release hardening
-- [ ] CI checks, dependency scanning, secret scanning and container scanning.
+- [x] Backend CI, real-MySQL API smoke test, container image build, Dependabot updates and CodeQL workflow.\n- [ ] Secret/container vulnerability scanning and release gates.
 - [ ] API contract, integration, UI and load tests.
 - [ ] Threat model, privacy review, production configuration review.
 - [ ] Staging deployment and rollback rehearsal before any production release.
