@@ -51,6 +51,9 @@ jobs:
           cache: maven
       - name: Build and test
         run: mvn --batch-mode verify
+      - name: Validate Docker Compose configuration
+        working-directory: ..
+        run: docker compose config --quiet
       - name: MySQL-backed end-to-end smoke test
         env:
           DB_URL: jdbc:mysql://127.0.0.1:3306/aa_game?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
