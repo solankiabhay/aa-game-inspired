@@ -38,6 +38,17 @@ class AuthenticationRateLimitFilterTest {
         assertEquals(429, invoke(filter, "/api/auth/login", "192.0.2.11").getStatus());
     }
 
+    @Test
+    void independentlyLimitsRegistrationAttempts() throws Exception {
+        AuthenticationRateLimitFilter filter = new AuthenticationRateLimitFilter(
+            5, Duration.ofMinutes(1), 1, Duration.ofHours(1));
+
+        assertEquals(200, invoke(filter, "/api/auth/register", "198.51.100.20").getStatus());
+        MockHttpServletResponse limited = invoke(filter, "/api/auth/register", "198.51.100.20");
+        assertEquals(429, limited.getStatus());
+        assertEquals("application/json", limited.getContentType());
+    }
+
     private static MockHttpServletResponse invoke(AuthenticationRateLimitFilter filter, String path, String ip)
             throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", path);
