@@ -6,9 +6,9 @@
 
 This repository is the single source of truth for what we are building and how to build it. Start here, then follow the documents in `docs/`.
 
-- **Current stage:** backend MVP foundation with tested registration/login, opaque sessions, demo-credit ledger initialization, and persistent demo game-session APIs; client/admin/deployment are still incomplete.
-- **Implemented so far:** `GET /api/health`, public game catalogue, Flyway user/session/credit/game tables, BCrypt registration, opaque 24-hour Bearer sessions with hashed token storage, logout/profile endpoints, 1,000 non-redeemable welcome credits with ledger entry, server-generated demo-session scores, H2 integration tests, GitHub Actions CI.
-- **Not implemented yet:** rate limiting, email verification/password reset, hardened unified error responses, admin UI/role management, Cocos Creator game client, actual production game mechanics, deployment and security/load testing.
+- **Current stage:** working browser MVP + backend APIs for authentication, demo credits, demo game sessions, and a role-protected admin console. The native Cocos Creator app and production hardening remain incomplete.
+- **Implemented so far:** `GET /api/health`, public game catalogue, Flyway migrations, BCrypt registration, opaque 24-hour Bearer sessions with hashed token storage, logout/profile endpoints, 1,000 non-redeemable welcome credits + ledger, server-generated demo-session scores, role-protected admin user status/audit APIs, API-connected browser client and admin console, H2 integration tests, GitHub Actions CI.
+- **Not implemented yet:** rate limiting, email verification/password reset, production-grade unified errors, admin game-configuration UI/API, native Cocos Creator project, complete game mechanics, deployment and security/load testing.
 - **Do not mistake a plan or placeholder for a finished feature.** Update this status whenever code is actually implemented and tested.
 
 ## 2. Product vision
