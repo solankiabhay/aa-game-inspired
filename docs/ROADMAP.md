@@ -35,7 +35,7 @@ Status is based on committed code, not design documents. See the [deployment gat
 
 ## P5 — Release candidate
 - [x] Backend CI, H2 integration tests, real-MySQL smoke test, Docker image build/run, Dependabot and CodeQL workflow configured.
-- [ ] Verify all latest CI runs pass after final changes.
+- [x] Latest CI run passed Maven tests, Compose config validation, real-MySQL API smoke tests, Docker image build and container runtime smoke test.
 - [ ] Add secret/container scanning, TLS/reverse proxy configuration, distributed rate limiting and production secrets management.
 - [ ] Staging deploy, load tests, monitoring, backup/restore, rollback rehearsal, security/privacy/legal review.
 
