@@ -1,0 +1,2 @@
+{"name":"arcade-lab-mobile","private":true,"version":"1.0.0","scripts":{"prep":"cp node_modules/three/build/three.module.js www/three.module.js"},
+"dependencies":{"@capacitor/android":"^6.2.0","@capacitor/cli":"^6.2.0","@capacitor/core":"^6.2.0","three":"0.160.0"}}

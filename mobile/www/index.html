@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#080b14"><title>Arcade Lab</title><style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#080b14;color:#f4f6ff;font:15px system-ui,sans-serif;touch-action:none}
+#c{position:fixed;inset:0;width:100%;height:100%}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));pointer-events:none}
+.ov>*{pointer-events:auto}.ov[hidden],#hud[hidden]{display:none}
+h1{margin:0;font-size:40px;background:linear-gradient(90deg,#a99aff,#70f0c2);-webkit-background-clip:text;color:transparent}
+.chip{align-self:flex-start;padding:7px 12px;border-radius:99px;background:rgba(112,240,194,.12);border:1px solid #70f0c2;color:#70f0c2;font-weight:700}
+.note{color:#9ba9c1;font-size:12px}
+.card{display:flex;gap:14px;align-items:center;text-align:left;width:100%;padding:16px;border-radius:18px;border:1px solid #33415b;background:rgba(17,24,39,.72);backdrop-filter:blur(10px);color:inherit;font:inherit}
+.card i{font-size:34px;font-style:normal}.card b{display:block;font-size:17px}.card small{display:block;color:#9ba9c1}.card em{color:#70f0c2;font-size:12px;font-style:normal}
+.p,.g{border:0;border-radius:14px;padding:14px;font:800 16px system-ui;color:#fff;background:linear-gradient(135deg,#a99aff,#7865f0)}.g{background:#202b40;border:1px solid #33415b}
+#hud{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;pointer-events:none}
+#hud b{flex:1}#h2{font-weight:800;color:#70f0c2;font-size:18px}#bk{pointer-events:auto;border:0;border-radius:10px;padding:8px 12px;background:rgba(32,43,64,.8);color:#fff}
+#over{background:rgba(8,11,20,.75);align-items:center;text-align:center}#os{font-size:56px;font-weight:900;color:#70f0c2}#ot{font-size:22px;font-weight:800}#over button{width:100%;max-width:300px}
+</style></head><body><canvas id="c"></canvas>
+<div id="hud" hidden><b id="h1"></b><span id="h2"></span><button id="bk">✕</button></div>
+<div id="menu" class="ov"><h1>Arcade Lab</h1><div class="chip" id="chip"></div><div id="cards" style="display:flex;flex-direction:column;gap:12px"></div><div class="note">Demo credits are for fun only — no monetary value, no real-money play.</div></div>
+<div id="over" class="ov" hidden><div id="ot"></div><div id="os"></div><div id="oe" class="note"></div><button class="p" id="again">Play again</button><button class="g" id="mn">Menu</button></div>
+<script type="module" src="main.js"></script></body></html>
