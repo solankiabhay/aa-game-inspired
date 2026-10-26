@@ -66,12 +66,41 @@ update(dt){this.t-=dt;if(this.t<=0)return end("Time's up!");this.sp-=dt;if(this.
 hud(){return Math.ceil(this.t)+'s · '+Math.floor(score)},
 onDown(x,y){const h=pick(x,y,this.f.filter(f=>!f.userData.pop));if(!h)return;let f=h.object;while(!f.userData.fish)f=f.parent;const u=f.userData;u.pop=.2;
  if(u.k=='p'){score=Math.max(0,score-15);beep(150,.2,'sawtooth');vib(40)}else{score+=u.k=='g'?30:10;beep(u.k=='g'?900:600,.1,'triangle');vib(10)}}};
-const games={sky,seq,reef};
-function menu(){cur=null;if(root){S.remove(root);root=null}over=true;idle.visible=true;bgc(0x080b14);C.position.set(0,0,9);C.lookAt(0,0,0);
+// ---- Roulette Practice: 3D wheel, demo chips only (true odds, no real money)
+const RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const EU=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26],US=[0,28,9,26,30,11,7,20,32,17,5,22,34,15,3,24,36,13,1,'00',27,10,25,29,12,8,19,31,18,6,21,33,16,4,23,35,14,2];
+const BETS={Red:[n=>RED.has(n),1],Black:[n=>n>0&&!RED.has(n),1],Odd:[n=>n>0&&n%2==1,1],Even:[n=>n>0&&n%2==0,1],'1-18':[n=>n>=1&&n<=18,1],'19-36':[n=>n>=19&&n<=36,1],'1st 12':[n=>n>=1&&n<=12,2],'2nd 12':[n=>n>=13&&n<=24,2],'3rd 12':[n=>n>=25&&n<=36,2]};
+const roul={i:'🎡',n:'Roulette Practice',d:'European / American 3D wheel with practice chips. True odds, no real money, no cash-out.',B:BETS,
+init(){bgc(0x080b14);C.position.set(0,7,6.5);C.lookAt(0,0,0);this.am=false;this.bets={};this.D=6;this.spinT=6;this.ang=0;this.res=null;this.w=this.ball=null;this.build();this.panel()},
+build(){if(this.w)root.remove(this.w);const P=this.P=this.am?US:EU,n=P.length,w=this.w=new THREE.Group();
+ P.forEach((v,i)=>{const a=i/n*Math.PI*2,c=v===0||v==='00'?0x1fa35c:RED.has(v)?0xd62839:0x151a26,m=new THREE.Mesh(new THREE.BoxGeometry(.75,.3,.9),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.3}));m.position.set(Math.cos(a)*3,0,Math.sin(a)*3);m.rotation.y=-a;w.add(m)});
+ const h=new THREE.Mesh(new THREE.CylinderGeometry(2.4,2.4,.2,40),new THREE.MeshStandardMaterial({color:0x2a1f10,emissive:0xffd166,emissiveIntensity:.15}));h.position.y=-.1;w.add(h);root.add(w);
+ if(!this.ball){this.ball=new THREE.Mesh(new THREE.SphereGeometry(.18,12,12),new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffff,emissiveIntensity:.6}));root.add(this.ball)}this.ball.position.set(3.7,.3,0)},
+panel(){const p=this.p=document.createElement('div');p.id='rp';p.style.cssText='position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(8,11,20,.88);display:flex;flex-direction:column;gap:8px';
+ p.innerHTML='<div id="rm" style="text-align:center;font-weight:800;min-height:20px"></div><div id="rn" style="display:flex;gap:6px;overflow-x:auto"></div><div id="rb" style="display:flex;flex-wrap:wrap;gap:6px"></div><div style="display:flex;gap:8px"><button class="g" id="ra" style="flex:2">European · 2.70% edge</button><button class="g" id="rx" style="flex:1">Clear</button><button class="p" id="rs" style="flex:2">SPIN</button></div>';
+ document.body.appendChild(p);const q=s=>p.querySelector(s);this.nums();
+ for(const k of Object.keys(BETS)){const b=document.createElement('button');b.className='g';b.textContent=k;b.style.cssText='padding:9px 11px';b.onclick=()=>this.add(k);q('#rb').appendChild(b)}
+ q('#rx').onclick=()=>{if(this.spinT>=this.D)this.clear()};q('#rs').onclick=()=>this.go();
+ q('#ra').onclick=()=>{if(this.spinT<this.D)return;this.clear();this.am=!this.am;this.res=null;this.build();this.nums();q('#ra').textContent=this.am?'American · 5.26% edge':'European · 2.70% edge'};this.msg()},
+nums(){const r=this.p.querySelector('#rn');r.innerHTML='';for(const v of[0,...(this.am?['00']:[]),...Array.from({length:36},(_,i)=>i+1)]){const b=document.createElement('button');b.className='g';b.textContent=v;b.style.cssText='padding:8px 10px;min-width:40px';b.onclick=()=>this.add('n'+v);r.appendChild(b)}},
+msg(t){this.p.querySelector('#rm').textContent=t||'Bet '+Object.values(this.bets).reduce((a,b)=>a+b,0)+' · Chips '+st.c+' · 10 per tap'},
+add(k){if(this.spinT<this.D)return;if(st.c<10){st.c=1000;this.msg('Practice chips reset to 1000');return}st.c-=10;this.bets[k]=(this.bets[k]||0)+10;save();this.msg();beep(500,.05)},
+clear(){for(const b of Object.values(this.bets))st.c+=b;this.bets={};save();this.msg()},
+go(){if(this.spinT<this.D||!Object.keys(this.bets).length)return;const r=new Uint32Array(1);crypto.getRandomValues(r);this.res=Math.floor(r[0]/2**32*this.P.length);
+ this.tg=this.ang+.6*this.D;this.th0=Math.atan2(this.ball.position.z,this.ball.position.x);this.spinT=0;this.msg('No more bets…');beep(200,.3,'triangle')},
+settle(){const v=this.P[this.res];let w=0,s=0;for(const[k,b]of Object.entries(this.bets)){s+=b;const q=k[0]=='n'?[x=>String(x)==k.slice(1),35]:BETS[k];if(q[0](v))w+=b*(q[1]+1)}
+ st.c+=w;this.bets={};save();vib(w>s?[30,30,60]:20);beep(w>s?880:220,.2);this.msg(v+' '+(v===0||v==='00'?'green':RED.has(v)?'red':'black')+' · '+(w>=s?'+':'−')+Math.abs(w-s)+' chips · Chips '+st.c)},
+update(dt){this.ang+=dt*.6;this.w.rotation.y=-this.ang;
+ if(this.spinT<this.D){this.spinT+=dt;const k=Math.min(1,this.spinT/this.D),e=1-Math.pow(1-k,3),a=this.res/this.P.length*Math.PI*2,th=this.th0+(a+this.tg-6*Math.PI-this.th0)*e,r=3.7-.75*e;
+  this.ball.position.set(Math.cos(th)*r,.3,Math.sin(th)*r);if(k>=1){this.ball.position.set(Math.cos(a+this.ang)*3,.3,Math.sin(a+this.ang)*3);this.settle()}}
+ else if(this.res!=null){const a=this.res/this.P.length*Math.PI*2;this.ball.position.set(Math.cos(a+this.ang)*3,.3,Math.sin(a+this.ang)*3)}},
+hud(){return 'Chips '+st.c},onDown(){}};
+const games={sky,seq,reef,roul};
+function menu(){$('#rp')?.remove();cur=null;if(root){S.remove(root);root=null}over=true;idle.visible=true;bgc(0x080b14);C.position.set(0,0,9);C.lookAt(0,0,0);
  $('#hud').hidden=$('#over').hidden=true;$('#menu').hidden=false;$('#chip').textContent='Demo Credits: '+st.c;
  $('#cards').innerHTML=Object.entries(games).map(([k,g])=>`<button class="card" data-g="${k}"><i>${g.i}</i><div><b>${g.n}</b><small>${g.d}</small><em>Best ${st.b[k]||0}</em></div></button>`).join('');
  document.querySelectorAll('.card').forEach(b=>b.onclick=()=>start(b.dataset.g))}
-function start(id){if(root)S.remove(root);cur=games[id];cur.id=id;root=new THREE.Group();S.add(root);idle.visible=false;score=0;over=false;T=0;
+function start(id){$('#rp')?.remove();if(root)S.remove(root);cur=games[id];cur.id=id;root=new THREE.Group();S.add(root);idle.visible=false;score=0;over=false;T=0;
  $('#menu').hidden=$('#over').hidden=true;$('#hud').hidden=false;$('#h1').textContent=cur.n;cur.init()}
 function end(msg){if(over)return;over=true;vib([80,40,120]);beep(120,.5,'sawtooth');const s=Math.floor(score),e=Math.floor(s/10);st.c+=e;st.b[cur.id]=Math.max(st.b[cur.id]||0,s);save();
  $('#ot').textContent=msg;$('#os').textContent=s;$('#oe').textContent='+'+e+' demo credits · best '+st.b[cur.id];$('#over').hidden=false}
