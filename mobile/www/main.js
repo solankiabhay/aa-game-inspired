@@ -95,7 +95,53 @@ update(dt){this.ang+=dt*.6;this.w.rotation.y=-this.ang;
   this.ball.position.set(Math.cos(th)*r,.3,Math.sin(th)*r);if(k>=1){this.ball.position.set(Math.cos(a+this.ang)*3,.3,Math.sin(a+this.ang)*3);this.settle()}}
  else if(this.res!=null){const a=this.res/this.P.length*Math.PI*2;this.ball.position.set(Math.cos(a+this.ang)*3,.3,Math.sin(a+this.ang)*3)}},
 hud(){return 'Chips '+st.c},onDown(){}};
-const games={sky,seq,reef,roul};
+// ---- shared card helpers (practice card games, demo chips only)
+const SU='♠♥♦♣',PS='position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(8,11,20,.88);display:flex;flex-direction:column;gap:8px';
+const panel=h=>{const p=document.createElement('div');p.id='rp';p.style.cssText=PS;p.innerHTML=h;document.body.appendChild(p);return p};
+const ri=n=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return Math.floor(a[0]/2**32*n)};
+const deck=()=>{const d=[];for(let s=0;s<4;s++)for(let r=2;r<=14;r++)d.push({r,s});for(let i=51;i>0;i--){const j=ri(i+1);[d[i],d[j]]=[d[j],d[i]]}return d};
+const RN=r=>({11:'J',12:'Q',13:'K',14:'A'}[r]||r),tex={},CG=new THREE.BoxGeometry(1,1.4,.02);
+const face=c=>{const k=c.r+'_'+c.s;if(tex[k])return tex[k];const cv=document.createElement('canvas');cv.width=128;cv.height=180;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,128,180);x.fillStyle=c.s==1||c.s==2?'#d62839':'#151a26';x.font='bold 40px Arial';x.fillText(RN(c.r),8,42);x.font='34px Arial';x.fillText(SU[c.s],10,80);x.font='64px Arial';x.textAlign='center';x.fillText(SU[c.s],64,135);return tex[k]=new THREE.CanvasTexture(cv)};
+const back=()=>{if(tex.b)return tex.b;const cv=document.createElement('canvas');cv.width=128;cv.height=180;const x=cv.getContext('2d');x.fillStyle='#2b1d63';x.fillRect(0,0,128,180);x.strokeStyle='#9b8cff';x.lineWidth=4;for(let i=0;i<9;i++){x.strokeRect(10+i*4,10+i*4,108-i*8,160-i*8)}return tex.b=new THREE.CanvasTexture(cv)};
+const mkCard=(c,sc=1)=>{const f=new THREE.MeshBasicMaterial({map:face(c)}),b=new THREE.MeshBasicMaterial({map:back()}),e=new THREE.MeshBasicMaterial({color:0xdddddd}),m=new THREE.Mesh(CG,[e,e,e,e,f,b]);m.scale.setScalar(sc);m.rotation.set(-.15,Math.PI,0);root.add(m);return m};
+const tw=[],mv=(m,p,ry,d=.4,cb)=>tw.push({m,p,ry,d,t:0,x:m.position.clone(),r:m.rotation.y,cb});
+const tws=dt=>{for(let i=tw.length-1;i>=0;i--){const q=tw[i];q.t+=dt;const k=Math.min(1,q.t/q.d),e=k*k*(3-2*k);q.m.position.lerpVectors(q.x,q.p,e);q.m.position.z+=Math.sin(k*Math.PI)*.4;q.m.rotation.y=q.r+(q.ry-q.r)*e;if(k>=1){tw.splice(i,1);q.cb&&q.cb()}}};
+const table=()=>{bgc(0x04201a);C.position.set(0,3,7.5);C.lookAt(0,.4,0);tw.length=0;const f=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshBasicMaterial({color:0x0b3d2e}));f.position.z=-1;root.add(f);const r=new THREE.Mesh(new THREE.TorusGeometry(2.6,.04,8,60),new THREE.MeshBasicMaterial({color:0xffd166}));r.position.set(0,.4,-.9);r.scale.y=1.6;root.add(r)};
+// ---- Teen Patti Practice: 3-card showdown vs 2 bots
+const HN=['','High card','Pair','Color','Sequence','Pure sequence','Trail'];
+const hv=h=>{const r=h.map(c=>c.r).sort((a,b)=>b-a),f=h.every(c=>c.s==h[0].s),tr=r[0]==r[2],sq=r[0]-r[1]==1&&r[1]-r[2]==1,a=r[0]==14&&r[1]==3&&r[2]==2;let t,k;
+ if(tr){t=6;k=[r[0]]}else if((sq||a)&&f){t=5;k=[a?13.5:r[0]]}else if(sq||a){t=4;k=[a?13.5:r[0]]}else if(f){t=3;k=r}else if(r[0]==r[1]||r[1]==r[2]){t=2;const p=r[1];k=[p,r.find(x=>x!=p)]}else{t=1;k=r}
+ const q=[...k,0,0,0].slice(0,3);return t*1e6+q[0]*2e4+q[1]*2e2+q[2]*2};
+const tp={i:'🃏',n:'Teen Patti Practice',d:'3-card showdown vs 2 bots. Fair pot, practice chips only.',
+init(){table();this.cs=[];this.s='idle';this.p=panel('<div id="rm" style="text-align:center;font-weight:800;min-height:20px"></div><div style="display:flex;gap:8px"><button class="g" id="tf" style="flex:1">Fold</button><button class="g" id="tr" style="flex:1">Raise 20</button><button class="g" id="ts" style="flex:1">Show</button><button class="p" id="td" style="flex:2">Deal 10</button></div>');
+ const q=s=>this.p.querySelector(s);q('#td').onclick=()=>this.deal();q('#tr').onclick=()=>this.raise();q('#ts').onclick=()=>this.show();q('#tf').onclick=()=>this.fold();this.msg('Ante 10 · Chips '+st.c)},
+msg(t){this.p.querySelector('#rm').textContent=t},
+deal(){if(this.s!='idle')return;this.cs.forEach(c=>root.remove(c));this.cs=[];if(st.c<10)st.c=1000;st.c-=10;save();const d=deck();this.hd=[0,1,2].map(()=>[d.pop(),d.pop(),d.pop()]);this.al=[1,1,1];this.pot=30;this.rz=0;this.s='live';
+ const P=[[0,-.9,.9],[-1,2.3,.5],[1,2.3,.5]];this.hd.forEach((h,i)=>h.forEach((c,j)=>{const m=mkCard(c,P[i][2]);m.position.set(0,1.6,0);this.cs.push(m);mv(m,new THREE.Vector3(P[i][0]+(j-1)*P[i][2]*.75,P[i][1],j*.01),i?Math.PI:0,.35+.1*(i*3+j))}));
+ beep(400,.1);this.msg('Your hand: '+HN[hv(this.hd[0])/1e6|0]+' · pot '+this.pot)},
+raise(){if(this.s!='live'||this.rz)return;if(st.c<20)return this.msg('Not enough chips');this.rz=1;st.c-=20;this.pot+=20;
+ for(const i of[1,2])if((hv(this.hd[i])/1e6|0)>=2||ri(10)<5)this.pot+=20;else{this.al[i]=0;for(let j=0;j<3;j++)root.remove(this.cs[i*3+j])}
+ if(!this.al[1]&&!this.al[2])return this.fin(this.pot,'Both bots folded');this.msg('Pot '+this.pot+' · tap Show')},
+fold(){if(this.s=='live')this.fin(0,'You folded (−10)')},
+show(){if(this.s!='live')return;const v=this.hd.map((h,i)=>this.al[i]?hv(h):-1),m=Math.max(...v),w=v.map((x,i)=>x==m?i:-1).filter(i=>i>=0);
+ for(const i of[1,2])if(this.al[i])this.cs.slice(i*3,i*3+3).forEach(c=>mv(c,c.position.clone(),0,.5));
+ const nm=v.map((x,i)=>x<0?'-':HN[x/1e6|0]).join(' | ');this.fin(w.includes(0)?this.pot/w.length:0,(w.includes(0)?'You win · ':'Bot wins · ')+nm)},
+fin(win,t){st.c+=win;save();this.s='idle';this.msg(t+' · Chips '+st.c);beep(win?880:220,.2);vib(win?[30,30,60]:20)},
+update(dt){tws(dt)},hud(){return 'Chips '+st.c},onDown(){}};
+// ---- Andar Bahar Practice: true-odds side bet, no real money
+const PA=0.515006,EA=2.149,EB=3.001;
+const ab={i:'🂡',n:'Andar Bahar Practice',d:'Guess the side that matches the joker. Practice chips, edge shown.',
+init(){table();this.cs=[];this.b={a:0,b:0};this.s='idle';this.q=[];this.p=panel('<div id="rm" style="text-align:center;font-weight:800;min-height:20px"></div><div style="display:flex;gap:8px"><button class="g" id="ba" style="flex:1">Andar 10<br><small>pays 0.9:1</small></button><button class="g" id="bb" style="flex:1">Bahar 10<br><small>pays 1:1</small></button></div><div style="display:flex;gap:8px"><button class="g" id="bx" style="flex:1">Clear</button><button class="p" id="bd" style="flex:2">DEAL</button></div>');
+ const q=s=>this.p.querySelector(s);q('#ba').onclick=()=>this.add('a');q('#bb').onclick=()=>this.add('b');q('#bx').onclick=()=>this.clear();q('#bd').onclick=()=>this.deal();this.msg()},
+msg(t){this.p.querySelector('#rm').textContent=t||'Andar '+this.b.a+' · Bahar '+this.b.b+' · Chips '+st.c+' · edge '+EA.toFixed(1)+'% / '+EB.toFixed(1)+'%'},
+add(k){if(this.s!='idle')return;if(st.c<10)st.c=1000;st.c-=10;this.b[k]+=10;save();this.msg();beep(500,.05)},
+clear(){if(this.s!='idle')return;st.c+=this.b.a+this.b.b;this.b={a:0,b:0};save();this.msg()},
+deal(){if(this.s!='idle'||!(this.b.a+this.b.b))return;this.cs.forEach(c=>root.remove(c));this.cs=[];tw.length=0;const d=deck(),j=d.pop();this.q=[];do{this.q.push(d.pop())}while(this.q[this.q.length-1].r!=j.r);
+ const m=mkCard(j,.9);m.position.set(0,2.1,0);mv(m,m.position.clone(),0,.5);this.cs.push(m);this.n=0;this.tm=.8;this.s='deal'},
+update(dt){tws(dt);if(this.s!='deal')return;this.tm-=dt;if(this.tm>0)return;this.tm=.22;const i=this.n++,c=this.q[i],side=i%2,row=i>>1,m=mkCard(c,.6);m.position.set(0,2.1,0);this.cs.push(m);mv(m,new THREE.Vector3(side?1:-1,1.1-row*.1,row*.01),0,.3);beep(300+side*150,.05);
+ if(i==this.q.length-1){this.s='end';const w=side?'b':'a',ret=this.b[w]*(w=='a'?1.9:2);st.c+=ret;const bet=this.b.a+this.b.b;save();this.msg((w=='a'?'ANDAR':'BAHAR')+' wins · '+(ret>=bet?'+':'−')+Math.abs(ret-bet)+' · Chips '+st.c);vib(ret>bet?[30,30,60]:20);this.b={a:0,b:0};this.s='idle'}},
+hud(){return 'Chips '+st.c},onDown(){}};
+const games={sky,seq,reef,roul,tp,ab};
 function menu(){$('#rp')?.remove();cur=null;if(root){S.remove(root);root=null}over=true;idle.visible=true;bgc(0x080b14);C.position.set(0,0,9);C.lookAt(0,0,0);
  $('#hud').hidden=$('#over').hidden=true;$('#menu').hidden=false;$('#chip').textContent='Demo Credits: '+st.c;
  $('#cards').innerHTML=Object.entries(games).map(([k,g])=>`<button class="card" data-g="${k}"><i>${g.i}</i><div><b>${g.n}</b><small>${g.d}</small><em>Best ${st.b[k]||0}</em></div></button>`).join('');
