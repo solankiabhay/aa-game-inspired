@@ -15,6 +15,6 @@ h1{margin:0;font-size:40px;background:linear-gradient(90deg,#a99aff,#70f0c2);-we
 #over{background:rgba(8,11,20,.75);align-items:center;text-align:center}#os{font-size:56px;font-weight:900;color:#70f0c2}#ot{font-size:22px;font-weight:800}#over button{width:100%;max-width:300px}
 </style></head><body><canvas id="c"></canvas>
 <div id="hud" hidden><b id="h1"></b><span id="h2"></span><button id="bk">✕</button></div>
-<div id="menu" class="ov"><h1>Arcade Lab</h1><div class="chip" id="chip"></div><div id="cards" style="display:flex;flex-direction:column;gap:12px"></div><div class="note">Demo credits are for fun only — no monetary value, no real-money play.</div></div>
+<div id="menu" class="ov"><h1>Arcade Lab</h1><div class="chip" id="chip"></div><div id="cards" style="display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:58vh;touch-action:pan-y"></div><div class="note">Demo credits are for fun only — no monetary value, no real-money play.</div></div>
 <div id="over" class="ov" hidden><div id="ot"></div><div id="os"></div><div id="oe" class="note"></div><button class="p" id="again">Play again</button><button class="g" id="mn">Menu</button></div>
 <script type="module" src="main.js"></script></body></html>
